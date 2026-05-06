@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { configureAudioSession } from "../src/audio/session";
 import { initDb } from "../src/db";
 import { useAppFonts } from "../src/theme/fonts";
 
@@ -22,6 +23,10 @@ export default function RootLayout() {
       .catch((err) => {
         console.error("Failed to initialize db", err);
       });
+
+    configureAudioSession().catch((err) => {
+      console.warn("Failed to configure audio session", err);
+    });
   }, []);
 
   const ready = fontsLoaded && dbReady;

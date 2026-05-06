@@ -66,7 +66,10 @@ export function loadTrack(track: Track): void {
 
   detach();
 
-  const next = createAudioPlayer(track.audioPath, { updateInterval: 200 });
+  const next = createAudioPlayer(track.audioPath, {
+    updateInterval: 200,
+    keepAudioSessionActive: true,
+  });
   player = next;
 
   setState({
