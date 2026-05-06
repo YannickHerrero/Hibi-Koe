@@ -1,4 +1,5 @@
 export { useCurrentTrack, usePlayback, usePlaybackProgress } from "./hooks";
+export { MiniPlayer } from "./MiniPlayer";
 export { Scrubber } from "./Scrubber";
 export { SpeedPicker } from "./SpeedPicker";
 export {

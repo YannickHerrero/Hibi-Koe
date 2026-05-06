@@ -1,25 +1,34 @@
 import { Tabs } from "expo-router";
+import { View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { MiniPlayer } from "../../src/features/player";
 
 export default function TabsLayout() {
   const { theme } = useUnistyles();
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: styles.bar,
-        tabBarActiveTintColor: theme.colors.ink,
-        tabBarInactiveTintColor: theme.colors.inkFaint,
-        tabBarLabelStyle: styles.label,
-      }}
-    >
-      <Tabs.Screen name="library" options={{ title: "Library" }} />
-      <Tabs.Screen name="settings" options={{ title: "Settings" }} />
-    </Tabs>
+    <View style={styles.root}>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: styles.bar,
+          tabBarActiveTintColor: theme.colors.ink,
+          tabBarInactiveTintColor: theme.colors.inkFaint,
+          tabBarLabelStyle: styles.label,
+        }}
+      >
+        <Tabs.Screen name="library" options={{ title: "Library" }} />
+        <Tabs.Screen name="settings" options={{ title: "Settings" }} />
+      </Tabs>
+      <MiniPlayer />
+    </View>
   );
 }
 
 const styles = StyleSheet.create((theme) => ({
+  root: {
+    flex: 1,
+    backgroundColor: theme.colors.paper,
+  },
   bar: {
     backgroundColor: theme.colors.paper,
     borderTopWidth: 1,
