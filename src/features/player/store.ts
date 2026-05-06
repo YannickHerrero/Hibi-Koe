@@ -109,6 +109,13 @@ export function loadTrack(track: Track): void {
       positionMs: Math.round(status.currentTime * 1000),
       durationMs: status.duration > 0 ? Math.round(status.duration * 1000) : track.durationMs,
     });
+
+    // When the track ends, snap the position back to 0 and stay paused
+    // so the user can press play again from the top.
+    if (status.didJustFinish) {
+      next.pause();
+      next.seekTo(0).catch(() => {});
+    }
   });
 }
 
