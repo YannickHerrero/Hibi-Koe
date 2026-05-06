@@ -32,6 +32,7 @@
     "expo-splash-screen": "^55.0.20",
     "expo-sqlite": "^55.0.15",
     "expo-status-bar": "~3.0.9",
+    "expo-updates": "^55.0.21",
     "react": "19.2.0",
     "react-native": "0.83.9",
     "react-native-edge-to-edge": "^1.8.1",
