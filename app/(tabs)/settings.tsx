@@ -1,6 +1,7 @@
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
+import { ThemePicker } from "../../src/features/settings";
 import { Display, Label, Masthead, Rule, SerifText } from "../../src/ui";
 
 export default function SettingsScreen() {
@@ -12,7 +13,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Label num="№ 01">Theme</Label>
           <Rule variant="soft" style={styles.rule} />
-          <SerifText soft>Theme picker arrives in Phase 10.</SerifText>
+          <ThemePicker />
         </View>
         <View style={styles.section}>
           <Label num="№ 02">About</Label>
