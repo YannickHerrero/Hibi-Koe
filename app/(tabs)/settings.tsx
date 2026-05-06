@@ -1,24 +1,44 @@
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
-import { ThemePicker } from "../../src/features/settings";
-import { Display, Label, Masthead, Rule, SerifText } from "../../src/ui";
+import { formatBytes, ThemePicker, useStorageUsage } from "../../src/features/settings";
+import { Display, Label, Masthead, Meta, Rule, SerifText } from "../../src/ui";
 
 export default function SettingsScreen() {
+  const usage = useStorageUsage();
+
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <Masthead right="№ 02 · Settings" />
       <ScrollView contentContainerStyle={styles.body}>
         <Display size="lg">Settings</Display>
+
         <View style={styles.section}>
           <Label num="№ 01">Theme</Label>
           <Rule variant="soft" style={styles.rule} />
           <ThemePicker />
         </View>
+
         <View style={styles.section}>
-          <Label num="№ 02">About</Label>
+          <Label num="№ 02">Storage</Label>
           <Rule variant="soft" style={styles.rule} />
-          <SerifText soft>Hibi Koe — passive listening immersion.</SerifText>
+          <View style={styles.kv}>
+            <Meta>Tracks</Meta>
+            <SerifText>{usage.trackCount}</SerifText>
+          </View>
+          <View style={styles.kv}>
+            <Meta>On disk</Meta>
+            <SerifText>{formatBytes(usage.totalBytes)}</SerifText>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Label num="№ 03">About</Label>
+          <Rule variant="soft" style={styles.rule} />
+          <SerifText soft italic>
+            Hibi Koe — passive listening immersion. Part of the Hibi ecosystem; the design system is
+            Torakaa.
+          </SerifText>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -42,5 +62,11 @@ const styles = StyleSheet.create((theme) => ({
   rule: {
     marginTop: theme.space.s1,
     marginBottom: theme.space.s2,
+  },
+  kv: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    paddingVertical: theme.space.s2,
   },
 }));
