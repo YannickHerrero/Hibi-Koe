@@ -4,3 +4,4 @@ export { fontFamilies, useAppFonts } from "./fonts";
 export type { AppTheme } from "./themes";
 export { themes } from "./themes";
 export { layout, lineHeight, radii, space, tracking, typography } from "./tokens";
+export { useThemeSwitcher } from "./useThemeSwitcher";
