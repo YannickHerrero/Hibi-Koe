@@ -7,7 +7,11 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "fix": "biome check --write .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "expo": "~55.0.23",
@@ -16,6 +20,7 @@
     "react-native": "0.83.9"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.4.14",
     "@types/react": "~19.2.0",
     "typescript": "~5.9.2"
   },
