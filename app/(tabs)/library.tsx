@@ -1,10 +1,14 @@
 import { router } from "expo-router";
-import { Pressable, View } from "react-native";
+import { FlatList, Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
-import { Display, Label, Masthead, Meta, Rule } from "../../src/ui";
+import { TrackRow, useTracks } from "../../src/features/library";
+import { Display, Label, Masthead, Meta, Rule, SerifText } from "../../src/ui";
 
 export default function LibraryScreen() {
+  const { tracks, error } = useTracks();
+  const isEmpty = tracks !== null && tracks.length === 0;
+
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <Masthead right="№ 01 · Library" />
@@ -16,7 +20,30 @@ export default function LibraryScreen() {
           </Pressable>
         </View>
         <Rule variant="solid" style={styles.rule} />
-        <Display size="lg">A quiet shelf.</Display>
+
+        {error ? (
+          <SerifText soft italic>
+            {error}
+          </SerifText>
+        ) : null}
+
+        {isEmpty ? (
+          <View style={styles.empty}>
+            <Display size="lg">A quiet shelf.</Display>
+            <SerifText soft italic style={styles.emptyHint}>
+              Import an audio file with a matching .srt to begin.
+            </SerifText>
+          </View>
+        ) : (
+          <FlatList
+            data={tracks ?? []}
+            keyExtractor={(t) => t.id}
+            renderItem={({ item }) => (
+              <TrackRow track={item} onPress={(t) => router.push(`/player/${t.id}`)} />
+            )}
+            contentContainerStyle={styles.list}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -39,9 +66,19 @@ const styles = StyleSheet.create((theme) => ({
   },
   rule: {
     marginTop: theme.space.s3,
-    marginBottom: theme.space.s5,
+    marginBottom: theme.space.s4,
   },
   action: {
     color: theme.colors.accent,
+  },
+  empty: {
+    paddingTop: theme.space.s6,
+    gap: theme.space.s3,
+  },
+  emptyHint: {
+    maxWidth: 280,
+  },
+  list: {
+    paddingBottom: theme.space.s8,
   },
 }));
