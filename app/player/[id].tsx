@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
-import { getTrack, type Track } from "../../src/db";
+import { getTrack, type Track, updateTrack } from "../../src/db";
 import { TrackArtwork } from "../../src/features/library";
 import {
   loadTrack,
@@ -48,6 +48,19 @@ export default function PlayerScreen() {
   useEffect(() => {
     if (track) setOffsetMs(track.offsetMs);
   }, [track]);
+
+  // Debounce-write the offset back to the DB so rapid taps coalesce
+  // into one UPDATE.
+  useEffect(() => {
+    if (!track) return;
+    if (offsetMs === track.offsetMs) return;
+    const handle = setTimeout(() => {
+      updateTrack(track.id, { offsetMs }).catch((err) => {
+        console.warn("Failed to persist subtitle offset", err);
+      });
+    }, 400);
+    return () => clearTimeout(handle);
+  }, [offsetMs, track]);
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
