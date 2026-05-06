@@ -13,4 +13,13 @@ export function initDb(): Promise<void> {
   return initialized;
 }
 
+export {
+  deleteTrack,
+  getTrack,
+  insertTrack,
+  listTracks,
+  type NewTrack,
+  type Track,
+  updateTrack,
+} from "./tracks";
 export { closeDb, getDb, latestSchemaVersion };
