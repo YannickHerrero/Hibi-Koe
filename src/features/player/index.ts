@@ -1,4 +1,5 @@
 export { useCurrentTrack, usePlayback, usePlaybackProgress } from "./hooks";
+export { Scrubber } from "./Scrubber";
 export {
   loadTrack,
   type PlaybackState,
