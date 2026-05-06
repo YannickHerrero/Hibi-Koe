@@ -54,6 +54,10 @@ export default function RootLayout() {
           name="import"
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
+        <Stack.Screen
+          name="track/[id]/edit"
+          options={{ presentation: "modal", animation: "slide_from_bottom" }}
+        />
       </Stack>
     </SafeAreaProvider>
   );

@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { FlatList, Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
-import { confirmDeleteTrack, TrackRow, useTracks } from "../../src/features/library";
+import { openTrackContextMenu, TrackRow, useTracks } from "../../src/features/library";
 import { Display, Label, Masthead, Meta, Rule, SerifText } from "../../src/ui";
 
 export default function LibraryScreen() {
@@ -42,7 +42,12 @@ export default function LibraryScreen() {
               <TrackRow
                 track={item}
                 onPress={(t) => router.push(`/player/${t.id}`)}
-                onLongPress={(t) => confirmDeleteTrack(t, refresh)}
+                onLongPress={(t) =>
+                  openTrackContextMenu(t, {
+                    onEdit: (target) => router.push(`/track/${target.id}/edit`),
+                    onDeleted: refresh,
+                  })
+                }
               />
             )}
             contentContainerStyle={styles.list}
