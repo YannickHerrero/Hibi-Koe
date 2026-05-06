@@ -23,6 +23,7 @@
     "expo-linking": "^55.0.15",
     "expo-router": "^55.0.14",
     "expo-splash-screen": "^55.0.20",
+    "expo-sqlite": "^55.0.15",
     "expo-status-bar": "~3.0.9",
     "react": "19.2.0",
     "react-native": "0.83.9",

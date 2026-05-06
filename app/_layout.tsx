@@ -3,24 +3,36 @@ import "../src/theme/unistyles";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { initDb } from "../src/db";
 import { useAppFonts } from "../src/theme/fonts";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   const [fontsLoaded] = useAppFonts();
+  const [dbReady, setDbReady] = useState(false);
   const { theme } = useUnistyles();
 
   useEffect(() => {
-    if (fontsLoaded) {
+    initDb()
+      .then(() => setDbReady(true))
+      .catch((err) => {
+        console.error("Failed to initialize db", err);
+      });
+  }, []);
+
+  const ready = fontsLoaded && dbReady;
+
+  useEffect(() => {
+    if (ready) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [fontsLoaded]);
+  }, [ready]);
 
-  if (!fontsLoaded) {
+  if (!ready) {
     return null;
   }
 
