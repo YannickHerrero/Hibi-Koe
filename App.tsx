@@ -1,5 +1,8 @@
+import "./src/theme/unistyles";
+
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
 import { useAppFonts } from "./src/theme/fonts";
 
 export default function App() {
@@ -17,16 +20,17 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
-    backgroundColor: "#F4EBD9",
+    backgroundColor: theme.colors.paper,
     alignItems: "center",
     justifyContent: "center",
   },
   serif: {
-    fontFamily: "Newsreader_400Regular",
-    fontSize: 44,
-    color: "#2B241B",
+    fontFamily: theme.fonts.serif,
+    fontSize: theme.typography.display.lg,
+    color: theme.colors.ink,
+    letterSpacing: theme.typography.display.lg * theme.tracking.tight,
   },
-});
+}));

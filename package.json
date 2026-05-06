@@ -21,7 +21,11 @@
     "expo-font": "^55.0.7",
     "expo-status-bar": "~3.0.9",
     "react": "19.2.0",
-    "react-native": "0.83.9"
+    "react-native": "0.83.9",
+    "react-native-edge-to-edge": "^1.8.1",
+    "react-native-nitro-modules": "^0.35.6",
+    "react-native-reanimated": "^4.3.0",
+    "react-native-unistyles": "^3.2.4"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.14",
