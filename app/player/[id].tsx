@@ -14,7 +14,7 @@ import {
   useCurrentTrack,
   usePlaybackProgress,
 } from "../../src/features/player";
-import { SubtitlePane, useSubtitles } from "../../src/features/subtitles";
+import { OffsetControl, SubtitlePane, useSubtitles } from "../../src/features/subtitles";
 import { Display, Meta, Rule, SerifText } from "../../src/ui";
 
 export default function PlayerScreen() {
@@ -43,6 +43,11 @@ export default function PlayerScreen() {
   }, [id, current]);
 
   const subtitles = useSubtitles(track?.subtitlePath);
+  const [offsetMs, setOffsetMs] = useState(track?.offsetMs ?? 0);
+
+  useEffect(() => {
+    if (track) setOffsetMs(track.offsetMs);
+  }, [track]);
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
@@ -83,10 +88,12 @@ export default function PlayerScreen() {
               index={subtitles.index}
               loading={subtitles.loading}
               positionMs={positionMs}
-              offsetMs={track.offsetMs}
+              offsetMs={offsetMs}
               onSeek={seekToMs}
             />
           </View>
+
+          {track.subtitlePath ? <OffsetControl valueMs={offsetMs} onChange={setOffsetMs} /> : null}
 
           <View style={styles.controls}>
             <Scrubber positionMs={positionMs} durationMs={durationMs} isLoaded={isLoaded} />
