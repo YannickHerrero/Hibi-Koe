@@ -15,6 +15,10 @@ Mobile passive-listening immersion app for the Hibi ecosystem. Audio + subtitle 
 - @react-native-community/slider for the scrubber
 - vitest for unit tests (`src/**/*.test.ts`)
 - Biome for lint/format, pnpm for package management
+- expo-updates for OTA delivery; runtimeVersion policy `fingerprint`,
+  channels declared in `eas.json` (development / preview / production).
+  `updates.url` and `extra.eas.projectId` are filled by
+  `eas update:configure`, not committed by hand.
 
 ## Design system
 
@@ -43,6 +47,7 @@ src/
     subtitles/            SRT parser, cue index, pane, offset control, loader hook
     import/               document pickers, sandbox copy, metadata probe, saveTrack
     settings/             theme picker, storage usage
+    updates/              UpdatePrompt — OTA notification via useUpdates
   theme/                  colors, tokens, fonts, themes, unistyles, useThemeSwitcher
   ui/                     primitives — Rule, Label, Meta, Display, SerifText,
                           Button, Field, SegmentedControl, Masthead

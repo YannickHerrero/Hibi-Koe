@@ -35,6 +35,37 @@ A custom dev client is required (the app uses native modules — `expo-audio`,
 `expo-sqlite`, `react-native-unistyles`, `react-native-reanimated`,
 `react-native-nitro-modules`). Expo Go is not supported.
 
+## OTA updates (EAS Update)
+
+The runtime is wired for EAS Update with a `fingerprint` runtimeVersion and
+auto-check on launch. The in-app `UpdatePrompt` watches `useUpdates()` and
+shows an Alert as soon as a bundle is downloaded; the user can apply now or
+defer to the next cold launch.
+
+One-time setup, run **once** against your Expo account:
+
+```bash
+npm install --global eas-cli
+eas login
+eas update:configure        # writes updates.url and extra.eas.projectId into app.json
+```
+
+Build a binary that knows about the channel:
+
+```bash
+eas build -p android --profile preview        # or --profile production
+```
+
+Ship a JS-only update later:
+
+```bash
+eas update --channel preview --message "Fix offset persistence"
+```
+
+The runtime checks for updates on each cold launch; once the new bundle is
+downloaded the prompt appears. In the dev client the prompt is silenced
+(updates only apply to release/preview builds).
+
 ## Scripts
 
 | Script | Purpose |
