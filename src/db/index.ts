@@ -13,6 +13,7 @@ export function initDb(): Promise<void> {
   return initialized;
 }
 
+export { deletePref, getPref, type PrefKey, setPref } from "./prefs";
 export {
   deleteTrack,
   getTrack,
