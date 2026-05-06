@@ -51,6 +51,11 @@ function detach(): void {
   }
   if (player) {
     try {
+      player.clearLockScreenControls();
+    } catch {
+      // best-effort
+    }
+    try {
       player.remove();
     } catch {
       // best-effort
@@ -71,6 +76,24 @@ export function loadTrack(track: Track): void {
     keepAudioSessionActive: true,
   });
   player = next;
+
+  // Surface the track on the Android lockscreen / notification shade and
+  // the iOS Now Playing widget. expo-audio binds the player to the
+  // platform's media session and renders artwork from the optional URL.
+  try {
+    next.setActiveForLockScreen(
+      true,
+      {
+        title: track.title,
+        artist: track.artist ?? undefined,
+        albumTitle: track.source ?? undefined,
+        artworkUrl: track.artworkPath ?? undefined,
+      },
+      { showSeekBackward: true, showSeekForward: true },
+    );
+  } catch (err) {
+    console.warn("Failed to bind track to lockscreen", err);
+  }
 
   setState({
     track,
