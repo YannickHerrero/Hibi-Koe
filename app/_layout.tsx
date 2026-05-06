@@ -8,6 +8,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { configureAudioSession } from "../src/audio/session";
 import { initDb } from "../src/db";
+import { UpdatePrompt } from "../src/features/updates";
 import { useAppFonts } from "../src/theme/fonts";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -64,6 +65,7 @@ export default function RootLayout() {
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
       </Stack>
+      <UpdatePrompt />
     </SafeAreaProvider>
   );
 }
