@@ -13,6 +13,7 @@
     },
     "updates": {
       "enabled": true,
+      "url": "https://u.expo.dev/6add40bc-6e11-487f-bc35-0471a29a0511",
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0
     },
@@ -31,7 +32,12 @@
         "backgroundColor": "#F4EBD9"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -50,6 +56,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6add40bc-6e11-487f-bc35-0471a29a0511"
+      }
     }
   }
 }
