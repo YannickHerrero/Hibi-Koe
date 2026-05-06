@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
 import { getTrack, type Track } from "../../src/db";
@@ -9,11 +9,13 @@ import {
   loadTrack,
   Scrubber,
   SpeedPicker,
+  seekToMs,
   Transport,
   useCurrentTrack,
   usePlaybackProgress,
 } from "../../src/features/player";
-import { Display, Label, Meta, Rule, SerifText } from "../../src/ui";
+import { SubtitlePane, useSubtitles } from "../../src/features/subtitles";
+import { Display, Meta, Rule, SerifText } from "../../src/ui";
 
 export default function PlayerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -40,6 +42,8 @@ export default function PlayerScreen() {
       .catch((err) => setError(err instanceof Error ? err.message : String(err)));
   }, [id, current]);
 
+  const subtitles = useSubtitles(track?.subtitlePath);
+
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <View style={styles.headerRow}>
@@ -49,19 +53,21 @@ export default function PlayerScreen() {
         <Meta>Now playing</Meta>
       </View>
       <Rule variant="solid" />
-      <ScrollView contentContainerStyle={styles.body}>
-        {error ? (
+
+      {error ? (
+        <View style={styles.errorWrap}>
           <SerifText soft italic>
             {error}
           </SerifText>
-        ) : null}
+        </View>
+      ) : null}
 
-        {track ? (
-          <>
+      {track ? (
+        <View style={styles.body}>
+          <View style={styles.header}>
             <View style={styles.artworkWrap}>
-              <TrackArtwork uri={track.artworkPath} title={track.title} size={240} />
+              <TrackArtwork uri={track.artworkPath} title={track.title} size={160} />
             </View>
-
             <View style={styles.titleBlock}>
               <Display size="md">{track.title}</Display>
               {track.artist || track.source ? (
@@ -70,19 +76,25 @@ export default function PlayerScreen() {
                 </Meta>
               ) : null}
             </View>
+          </View>
 
+          <View style={styles.subtitlesWrap}>
+            <SubtitlePane
+              index={subtitles.index}
+              loading={subtitles.loading}
+              positionMs={positionMs}
+              offsetMs={track.offsetMs}
+              onSeek={seekToMs}
+            />
+          </View>
+
+          <View style={styles.controls}>
             <Scrubber positionMs={positionMs} durationMs={durationMs} isLoaded={isLoaded} />
-
             <Transport playing={playing} isLoaded={isLoaded} />
-
-            <View style={styles.speedSection}>
-              <Label num="№ 01">Speed</Label>
-              <Rule variant="soft" style={styles.speedRule} />
-              <SpeedPicker />
-            </View>
-          </>
-        ) : null}
-      </ScrollView>
+            <SpeedPicker />
+          </View>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -98,27 +110,38 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space.s5,
     paddingVertical: theme.space.s4,
   },
-  body: {
+  errorWrap: {
     paddingHorizontal: theme.space.s5,
-    paddingTop: theme.space.s6,
-    paddingBottom: theme.space.s8,
-    gap: theme.space.s6,
-  },
-  artworkWrap: {
-    alignItems: "center",
     paddingVertical: theme.space.s4,
   },
+  body: {
+    flex: 1,
+    paddingHorizontal: theme.space.s5,
+    paddingTop: theme.space.s4,
+    paddingBottom: theme.space.s5,
+    gap: theme.space.s4,
+  },
+  header: {
+    flexDirection: "row",
+    gap: theme.space.s4,
+    alignItems: "center",
+  },
+  artworkWrap: {},
   titleBlock: {
-    gap: theme.space.s2,
+    flex: 1,
+    gap: theme.space.s1,
   },
   subline: {
     marginTop: theme.space.s1,
   },
-  speedSection: {
-    gap: theme.space.s2,
+  subtitlesWrap: {
+    flex: 1,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: theme.colors.ruleSoft,
   },
-  speedRule: {
-    marginTop: theme.space.s1,
-    marginBottom: theme.space.s2,
+  controls: {
+    gap: theme.space.s4,
+    paddingTop: theme.space.s2,
   },
 }));
