@@ -1,5 +1,6 @@
 export { useCurrentTrack, usePlayback, usePlaybackProgress } from "./hooks";
 export { Scrubber } from "./Scrubber";
+export { SpeedPicker } from "./SpeedPicker";
 export {
   loadTrack,
   type PlaybackState,
