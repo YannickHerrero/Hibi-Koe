@@ -50,6 +50,10 @@ export default function RootLayout() {
           name="player/[id]"
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
+        <Stack.Screen
+          name="import"
+          options={{ presentation: "modal", animation: "slide_from_bottom" }}
+        />
       </Stack>
     </SafeAreaProvider>
   );
