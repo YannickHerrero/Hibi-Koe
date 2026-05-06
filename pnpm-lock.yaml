@@ -8,9 +8,21 @@ importers:
 
   .:
     dependencies:
+      '@expo-google-fonts/geist':
+        specifier: ^0.4.1
+        version: 0.4.1
+      '@expo-google-fonts/geist-mono':
+        specifier: ^0.4.1
+        version: 0.4.1
+      '@expo-google-fonts/newsreader':
+        specifier: ^0.4.1
+        version: 0.4.1
       expo:
         specifier: ~55.0.23
         version: 55.0.23(@babel/core@7.29.0)(@expo/dom-webview@55.0.6)(react-native@0.83.9(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+      expo-font:
+        specifier: ^55.0.7
+        version: 55.0.7(expo@55.0.23)(react-native@0.83.9(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
       expo-status-bar:
         specifier: ~3.0.9
         version: 3.0.9(react-native@0.83.9(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
@@ -579,6 +591,15 @@ packages:
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
+
+  '@expo-google-fonts/geist-mono@0.4.1':
+    resolution: {integrity: sha512-4amQyslc5Qsr06CymJA7PzUaJd0ohlbpY7sWqRfZkwPp9xeVzy9JBLg05VwO3bx+M4CY+FV4AAIG/8fGRCXguw==}
+
+  '@expo-google-fonts/geist@0.4.1':
+    resolution: {integrity: sha512-UOBwoTJkKC0ViMOS8gjlQyUcT/5PX0phCroz/8z0DP1+7FcoD1RGGeG//nVQYWbT3y/ze4XoE63gSunml9Wdbw==}
+
+  '@expo-google-fonts/newsreader@0.4.1':
+    resolution: {integrity: sha512-j96W112+mj/VYP06DCq00w+twyw42w0MY7eHB/XXioNK80BcG0cIk/zogjOENZSY7qejzIFbHE/PZYqlh/6VKQ==}
 
   '@expo/cli@55.0.29':
     resolution: {integrity: sha512-r2dXQ82e/3nwxS7faLRL6HBD8UWDo/IyptQ0Vg6Z5Bgyp2Kd24h8xPn3RHfY3LLJ3wfEXglf4E79/Dqkm1Z6WA==}
@@ -3090,6 +3111,12 @@ snapshots:
 
   '@biomejs/cli-win32-x64@2.4.14':
     optional: true
+
+  '@expo-google-fonts/geist-mono@0.4.1': {}
+
+  '@expo-google-fonts/geist@0.4.1': {}
+
+  '@expo-google-fonts/newsreader@0.4.1': {}
 
   '@expo/cli@55.0.29(@expo/dom-webview@55.0.6)(expo-constants@55.0.16(expo@55.0.23)(react-native@0.83.9(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0)))(expo-font@55.0.7(expo@55.0.23)(react-native@0.83.9(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(expo@55.0.23)(react-native@0.83.9(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)':
     dependencies:
