@@ -2,6 +2,7 @@ export { Button } from "./Button";
 export { Display } from "./Display";
 export { Field } from "./Field";
 export { Label } from "./Label";
+export { Masthead } from "./Masthead";
 export { Meta } from "./Meta";
 export { Rule } from "./Rule";
 export { SegmentedControl, type SegmentItem } from "./SegmentedControl";
