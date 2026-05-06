@@ -10,3 +10,4 @@ export {
   togglePlay,
   unload,
 } from "./store";
+export { Transport } from "./Transport";
