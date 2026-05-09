@@ -10,7 +10,7 @@ import { configureAudioSession } from "../src/audio/session";
 import { initDb } from "../src/db";
 import { UpdatePrompt } from "../src/features/updates";
 import { useAppFonts } from "../src/theme/fonts";
-import { ErrorBoundary } from "../src/ui";
+import { ErrorBoundary } from "../src/ui/ErrorBoundary";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
