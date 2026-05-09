@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { insertSavedWord, type Track } from "../../db";
+import { hasHibiApiKey } from "./hibiApiKey";
+import { syncSavedWord } from "./sync";
 import { Display, Meta, Rule, SerifText } from "../../ui";
 import { getEntries, loadDictionaries } from "./dict";
 import type { AnalyzedCue, DictEntry, DictMatch } from "./types";
@@ -99,8 +101,9 @@ export function DictionaryPopup({
       const lemma = activeEntry.forms[0] ?? activeMatch.form;
       const glosses = activeEntry.senses.flatMap((s) => s.glosses).slice(0, 8);
       const pos = activeEntry.senses[0]?.pos.join(" / ") ?? null;
+      const newId = Crypto.randomUUID();
       await insertSavedWord({
-        id: Crypto.randomUUID(),
+        id: newId,
         trackId: track.id,
         cueIndex: cue.index,
         surface: tappedSurface,
@@ -118,6 +121,11 @@ export function DictionaryPopup({
       });
       setSavingState("saved");
       onSaved?.();
+      // Fire-and-forget sync. The vocab tab badge surfaces success /
+      // failure; we don't want the UI to block on the network here.
+      if (await hasHibiApiKey()) {
+        syncSavedWord(newId).catch((err) => console.warn("[hibi-sync] auto-sync failed", err));
+      }
     } catch (err) {
       console.error("[mining] insertSavedWord failed", err);
       setError(err instanceof Error ? err.message : String(err));
