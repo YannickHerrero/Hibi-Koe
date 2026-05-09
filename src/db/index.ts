@@ -24,6 +24,16 @@ export {
   setPref,
 } from "./prefs";
 export {
+  countSavedWords,
+  deleteSavedWord,
+  deleteSavedWordsForTrack,
+  getSavedWord,
+  insertSavedWord,
+  listSavedWords,
+  type NewSavedWord,
+  type SavedWord,
+} from "./savedWords";
+export {
   type AnalysisState,
   deleteTrack,
   getTrack,
