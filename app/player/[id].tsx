@@ -38,7 +38,10 @@ export default function PlayerScreen() {
         setTrack(t);
         loadTrack(t);
       })
-      .catch((err) => setError(err instanceof Error ? err.message : String(err)));
+      .catch((err) => {
+        console.error("[player] getTrack failed", err);
+        setError(err instanceof Error ? err.message : String(err));
+      });
   }, [id, current]);
 
   const subtitles = useSubtitles(track?.subtitlePath);

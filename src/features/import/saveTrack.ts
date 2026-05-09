@@ -31,6 +31,7 @@ export async function saveTrack({ audio, subtitle }: SaveArgs): Promise<Track> {
       artworkPath: null,
     });
   } catch (err) {
+    console.error("[saveTrack] failed; rolling back sandbox", { id, err });
     deleteTrackDir(id);
     throw err;
   }

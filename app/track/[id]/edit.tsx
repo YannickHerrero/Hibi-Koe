@@ -53,6 +53,7 @@ export default function EditTrackScreen() {
       });
       router.back();
     } catch (err) {
+      console.error("[track-edit] updateTrack failed", err);
       setError(err instanceof Error ? err.message : String(err));
       setSaving(false);
     }

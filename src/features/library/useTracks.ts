@@ -14,6 +14,7 @@ export function useTracks() {
       setTracks(next);
       setError(null);
     } catch (err) {
+      console.error("[library] listTracks failed", err);
       setError(err instanceof Error ? err.message : String(err));
     }
   }, []);

@@ -23,6 +23,7 @@ export default function ImportScreen() {
       const result = await pickAudio();
       if (result) setAudio(result);
     } catch (err) {
+      console.error("[import] pickAudio failed", err);
       setError(err instanceof Error ? err.message : String(err));
     }
   };
@@ -33,6 +34,7 @@ export default function ImportScreen() {
       const result = await pickSubtitle();
       if (result) setSubtitle(result);
     } catch (err) {
+      console.error("[import] pickSubtitle failed", err);
       setError(err instanceof Error ? err.message : String(err));
     }
   };
@@ -45,6 +47,7 @@ export default function ImportScreen() {
       await saveTrack({ audio, subtitle });
       router.replace("/");
     } catch (err) {
+      console.error("[import] saveTrack failed", err);
       setError(err instanceof Error ? err.message : String(err));
       setSaving(false);
     }
