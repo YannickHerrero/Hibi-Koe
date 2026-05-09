@@ -34,6 +34,7 @@ export {
   type TranslateOptions,
   translateCues,
 } from "./llm";
+export { MiningSheet } from "./MiningSheet";
 export { buildMatches } from "./match";
 export {
   authHeaders,
