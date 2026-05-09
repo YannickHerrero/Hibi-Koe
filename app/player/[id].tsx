@@ -13,12 +13,7 @@ import {
   useCurrentTrack,
   usePlaybackProgress,
 } from "../../src/features/player";
-import {
-  OffsetControl,
-  SubtitlePane,
-  SubtitleSettingsModal,
-  useSubtitles,
-} from "../../src/features/subtitles";
+import { SubtitlePane, SubtitleSettingsModal, useSubtitles } from "../../src/features/subtitles";
 import { Display, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function PlayerScreen() {
@@ -124,8 +119,6 @@ export default function PlayerScreen() {
               onSeek={seekToMs}
             />
           </View>
-
-          {track.subtitlePath ? <OffsetControl valueMs={offsetMs} onChange={setOffsetMs} /> : null}
 
           <View style={styles.controls}>
             <Scrubber positionMs={positionMs} durationMs={durationMs} isLoaded={isLoaded} />
