@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { FlatList, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { FlatList, type ListRenderItem, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { SerifText } from "../../ui";
 import type { CueIndex } from "./cueIndex";
@@ -36,6 +36,37 @@ export function SubtitlePane({ index, loading, positionMs, offsetMs = 0, onSeek 
     });
   }, [index, targetIdx]);
 
+  // Stable seek-by-cue handler so SubtitleLine's memo isn't busted on every
+  // playback tick. Reads cues from the latest index via the ref so we don't
+  // reallocate the closure when offsetMs changes.
+  const indexRef = useRef(index);
+  indexRef.current = index;
+  const offsetRef = useRef(offsetMs);
+  offsetRef.current = offsetMs;
+  const onSeekRef = useRef(onSeek);
+  onSeekRef.current = onSeek;
+
+  const onPressCue = useCallback((cueIndex: number) => {
+    const cue = indexRef.current?.cues[cueIndex];
+    if (!cue) return;
+    onSeekRef.current?.(cue.startMs + offsetRef.current);
+  }, []);
+
+  const renderItem = useMemo<ListRenderItem<Cue>>(
+    () =>
+      ({ item, index: i }) => (
+        <SubtitleLine
+          cueIndex={i}
+          text={item.text}
+          active={i === activeIdx}
+          onPressCue={onPressCue}
+        />
+      ),
+    // activeIdx changes when the active line crosses a boundary; renderItem
+    // needs to reflect that, but only then.
+    [activeIdx, onPressCue],
+  );
+
   if (loading) {
     return (
       <View style={styles.empty}>
@@ -59,17 +90,15 @@ export function SubtitlePane({ index, loading, positionMs, offsetMs = 0, onSeek 
     <FlatList
       ref={listRef}
       data={index.cues}
-      keyExtractor={(cue) => `${cue.startMs}-${cue.index}`}
-      renderItem={({ item, index: i }) => (
-        <SubtitleLine
-          text={item.text}
-          active={i === activeIdx}
-          onPress={onSeek ? () => onSeek(item.startMs + offsetMs) : undefined}
-        />
-      )}
+      keyExtractor={keyExtractor}
+      renderItem={renderItem}
       style={styles.scroll}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
+      initialNumToRender={20}
+      maxToRenderPerBatch={20}
+      windowSize={11}
+      removeClippedSubviews
       onScrollToIndexFailed={(info) => {
         // FlatList may not have measured the target row yet; retry after a tick.
         setTimeout(() => {
@@ -81,6 +110,10 @@ export function SubtitlePane({ index, loading, positionMs, offsetMs = 0, onSeek 
       }}
     />
   );
+}
+
+function keyExtractor(cue: Cue): string {
+  return `${cue.startMs}-${cue.index}`;
 }
 
 const styles = StyleSheet.create((theme) => ({
