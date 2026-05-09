@@ -1,20 +1,24 @@
-// Ported from Pureyaa src/onboarding/dict-installer.ts.
-//
 // Downloads the latest jmdict-simplified release, extracts each .tgz,
 // converts the raw JSON into our DictBundle shape, and persists the
-// serialised maps to Paths.document/dict/. Stages emit progress so the
-// Settings UI can render a sequence of bars / spinners.
+// rows into SQLite (dict_entries + dict_index). Stages emit progress
+// so the Settings UI can render a sequence of bars / spinners.
 //
-// Heavy synchronous steps (gunzip on ~10 MB, JSON.parse on ~100 MB,
-// JSON.stringify on the serialised bundle) each get an explicit yield
-// to the event loop before they run so React can paint the new stage
-// label — without that the UI freezes on the last download tick for
-// 10–20 s and the install looks hung.
+// Why SQLite instead of JSON files: JMnedict's serialised bundle is
+// ~250 MB. file.text() on Android allocates the whole thing in one
+// shot, which OOMs on devices with a tight heap. Per-row writes also
+// let us index dict_index.form so lookups stay O(log n).
+//
+// Heavy synchronous steps (gunzip on ~10 MB, JSON.parse on ~100 MB)
+// each yield to the event loop before they run so React can paint
+// the new stage label — without that the UI freezes for 10–20 s and
+// the install looks hung.
 
 import pako from "pako";
+import { clearDict, type DictName, insertDictEntriesBatch, insertDictIndexBatch } from "../../db";
 import { convertJmdict, convertJmnedict } from "./convert";
-import { DICT_DIR, JMDICT_FILE, JMNEDICT_FILE, serializeBundle } from "./dict";
+import { DICT_DIR, JMDICT_FILE, JMNEDICT_FILE } from "./dict";
 import { extractFirstFile } from "./tar";
+import type { DictBundle } from "./types";
 
 export type InstallStage =
   | "fetching-release"
@@ -66,7 +70,6 @@ function findAsset(release: Release, predicate: (name: string) => boolean): Rele
 
 // XHR is used (instead of fetch) because RN's fetch buffers the whole
 // body before resolving — there's no way to observe per-chunk progress.
-// XHR's `onprogress` event gives us byte counts during download.
 function downloadTgzWithProgress(
   asset: ReleaseAsset,
   onProgress: (received: number, total: number) => void,
@@ -95,16 +98,63 @@ function nextTick(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-function tgzToJsonText(compressed: Uint8Array): string {
-  const tar = pako.ungzip(compressed);
-  const { data } = extractFirstFile(tar);
-  return new TextDecoder().decode(data);
+// SQLite has a default parameter limit of 999. Each entry insert binds
+// 3 params (dict_name, id, payload) so 300 rows = 900 params, safely
+// under. Each index insert also binds 3 params.
+const ROWS_PER_BATCH = 300;
+
+async function persistBundle(
+  dict: DictName,
+  bundle: DictBundle,
+  onItem: (current: number, total: number) => void,
+): Promise<void> {
+  await clearDict(dict);
+
+  const entries = Array.from(bundle.entries.entries());
+  const totalEntries = entries.length;
+  for (let i = 0; i < entries.length; i += ROWS_PER_BATCH) {
+    const slice = entries.slice(i, i + ROWS_PER_BATCH);
+    await insertDictEntriesBatch(
+      dict,
+      slice.map(([id, entry]) => ({ id, payload: JSON.stringify(entry) })),
+    );
+    onItem(Math.min(i + slice.length, totalEntries), totalEntries);
+    if (i % (ROWS_PER_BATCH * 4) === 0) await nextTick();
+  }
+
+  // Flatten the index. Each form points to one or more entry ids.
+  const indexRows: Array<{ form: string; entryId: number }> = [];
+  for (const [form, ids] of bundle.index) {
+    for (const id of ids) indexRows.push({ form, entryId: id });
+  }
+  for (let i = 0; i < indexRows.length; i += ROWS_PER_BATCH) {
+    await insertDictIndexBatch(dict, indexRows.slice(i, i + ROWS_PER_BATCH));
+    if (i % (ROWS_PER_BATCH * 4) === 0) await nextTick();
+  }
+}
+
+function deleteLegacyFiles(): void {
+  // The previous installer wrote ~50 MB + ~250 MB JSON bundles into
+  // Paths.document/dict/. They're no longer read; reclaim the disk on
+  // the first SQLite-aware install.
+  for (const f of [JMDICT_FILE, JMNEDICT_FILE]) {
+    if (f.exists) {
+      try {
+        f.delete();
+      } catch (err) {
+        console.warn("[mining] failed to delete legacy dict file", f.uri, err);
+      }
+    }
+  }
+  if (DICT_DIR.exists) {
+    // Keep the directory; harmless if empty.
+  }
 }
 
 export async function installDictionaries(
   onProgress?: (p: InstallProgress) => void,
 ): Promise<void> {
-  if (!DICT_DIR.exists) DICT_DIR.create({ intermediates: true });
+  deleteLegacyFiles();
 
   onProgress?.({ stage: "fetching-release" });
   const release = await fetchRelease();
@@ -138,7 +188,9 @@ export async function installDictionaries(
 
   onProgress?.({ stage: "saving-jmdict" });
   await nextTick();
-  JMDICT_FILE.write(JSON.stringify(serializeBundle(jmdictBundle)));
+  await persistBundle("jmdict", jmdictBundle, (current, total) => {
+    onProgress?.({ stage: "saving-jmdict", current, total, unit: "items" });
+  });
 
   // ── JMnedict ───────────────────────────────────────────────────────
   const jmnedictAsset = findAsset(
@@ -169,10 +221,9 @@ export async function installDictionaries(
 
   onProgress?.({ stage: "saving-jmnedict" });
   await nextTick();
-  JMNEDICT_FILE.write(JSON.stringify(serializeBundle(jmnedictBundle)));
+  await persistBundle("jmnedict", jmnedictBundle, (current, total) => {
+    onProgress?.({ stage: "saving-jmnedict", current, total, unit: "items" });
+  });
 
   onProgress?.({ stage: "done" });
 }
-
-// Kept for parity with previous import path; not currently used here.
-void tgzToJsonText;
