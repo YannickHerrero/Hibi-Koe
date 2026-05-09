@@ -8,6 +8,7 @@ import { configureAudioSession } from "../src/audio/session";
 import { initDb } from "../src/db";
 import { UpdatePrompt } from "../src/features/updates";
 import { useAppFonts } from "../src/theme/fonts";
+import { hydrateTheme } from "../src/theme/useThemeSwitcher";
 import { ErrorBoundary } from "../src/ui/ErrorBoundary";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -26,12 +27,17 @@ function RootLayoutInner() {
   const [dbError, setDbError] = useState<string | null>(null);
 
   useEffect(() => {
-    initDb()
-      .then(() => setDbReady(true))
-      .catch((err) => {
-        console.error("Failed to initialize db", err);
-        setDbError(err instanceof Error ? err.message : String(err));
-      });
+    // Migrations must finish before we can read prefs; the saved theme
+    // has to be applied before any UI renders or we get a flash of the
+    // default paper theme on cold start.
+    (async () => {
+      await initDb();
+      await hydrateTheme();
+      setDbReady(true);
+    })().catch((err) => {
+      console.error("Failed to initialize db", err);
+      setDbError(err instanceof Error ? err.message : String(err));
+    });
 
     configureAudioSession().catch((err) => {
       console.warn("Failed to configure audio session", err);
