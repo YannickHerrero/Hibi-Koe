@@ -25,6 +25,12 @@ Mobile passive-listening immersion app for the Hibi ecosystem. Audio + subtitle 
   `Paths.document/dict/`, OpenRouter (anthropic/claude-sonnet-4.5)
   for context-aware translation via XHR-streamed JSON arrays,
   expo-secure-store for the API key.
+- Hibi sync stack: `hibi-client` SDK over a bearer API key (also in
+  expo-secure-store, separate from the OpenRouter key). On Save, the
+  local `audio-extract` Expo module slices the source track at the
+  cue boundaries, the resulting m4a is uploaded to Hibi's Supabase
+  Storage bucket, and the card is created. State lives on the
+  saved_words row in `sync_state` / `sync_error` (migration v4).
 
 ## Design system
 
@@ -81,6 +87,4 @@ Short imperative subject, conventional commit prefix (chore/feat/fix/docs/refact
 ## Out of scope (still)
 
 A-B loop, sleep timer, batch import, share-intent, multi-track subtitles,
-AnkiDroid native bridge, audio-clip extraction (cards still reference the
-source track via trackId + startMs / endMs), Hibi API sync, EAS production
-builds. Add later; do not pre-plumb.
+AnkiDroid native bridge, EAS production builds. Add later; do not pre-plumb.
