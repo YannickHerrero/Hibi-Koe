@@ -20,6 +20,9 @@ importers:
       '@react-native-community/slider':
         specifier: ^5.2.0
         version: 5.2.0
+      audio-extract:
+        specifier: file:./modules/audio-extract
+        version: file:modules/audio-extract
       expo:
         specifier: ~55.0.23
         version: 55.0.23(@babel/core@7.29.0)(@expo/dom-webview@55.0.6)(@expo/metro-runtime@55.0.11)(expo-router@55.0.14)(react-dom@19.2.6(react@19.2.0))(react-native-worklets@0.8.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(react-native@0.83.9(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))(react@19.2.0))(react-native@0.83.9(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
@@ -68,6 +71,9 @@ importers:
       expo-updates:
         specifier: ^55.0.21
         version: 55.0.21(expo@55.0.23)(react-native@0.83.9(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
+      hibi-client:
+        specifier: file:../Hibi/packages/api-client
+        version: file:../Hibi/packages/api-client
       kuromoji-react-native:
         specifier: ^1.0.1
         version: 1.0.1
@@ -1594,6 +1600,9 @@ packages:
   async@2.6.4:
     resolution: {integrity: sha512-mzo5dfJYwAn29PeiJ0zvwTo04zj8HDJj0Mn8TD7sno7q12prdbnasKJHhkm2c1LgrhlJ0teaea8860oxi51mGA==}
 
+  audio-extract@file:modules/audio-extract:
+    resolution: {directory: modules/audio-extract, type: directory}
+
   await-lock@2.2.2:
     resolution: {integrity: sha512-aDczADvlvTGajTDjcjpJMqRkOF6Qdz3YbPZm/PyW6tKPkx2hlYBzxMhEywM/tU72HrVZjgl5VCdRuMlA7pZ8Gw==}
 
@@ -2337,6 +2346,9 @@ packages:
 
   hermes-parser@0.35.0:
     resolution: {integrity: sha512-9JLjeHxBx8T4CAsydZR49PNZUaix+WpQJwu9p2010lu+7Kwl6D/7wYFFJxoz+aXkaaClp9Zfg6W6/zVlSJORaA==}
+
+  hibi-client@file:../Hibi/packages/api-client:
+    resolution: {directory: ../Hibi/packages/api-client, type: directory}
 
   hosted-git-info@7.0.2:
     resolution: {integrity: sha512-puUZAUKT5m8Zzvs72XWy3HtvVbTWljRE66cP60bxJzAqf2DgICo7lYTY2IHUmLnNpjYvw5bvmoHvPc0QO2a62w==}
@@ -3658,6 +3670,9 @@ packages:
 
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
 snapshots:
 
@@ -5505,6 +5520,8 @@ snapshots:
     dependencies:
       lodash: 4.18.1
 
+  audio-extract@file:modules/audio-extract: {}
+
   await-lock@2.2.2: {}
 
   babel-jest@29.7.0(@babel/core@7.29.0):
@@ -6303,6 +6320,10 @@ snapshots:
   hermes-parser@0.35.0:
     dependencies:
       hermes-estree: 0.35.0
+
+  hibi-client@file:../Hibi/packages/api-client:
+    dependencies:
+      zod: 4.4.3
 
   hosted-git-info@7.0.2:
     dependencies:
@@ -7736,3 +7757,5 @@ snapshots:
   zlibjs@0.3.1: {}
 
   zod@3.25.76: {}
+
+  zod@4.4.3: {}
