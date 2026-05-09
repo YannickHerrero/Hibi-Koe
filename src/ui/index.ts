@@ -10,5 +10,6 @@ export { Label } from "./Label";
 export { Masthead } from "./Masthead";
 export { Meta } from "./Meta";
 export { Rule } from "./Rule";
+export { SafeAreaView } from "./SafeAreaView";
 export { SegmentedControl, type SegmentItem } from "./SegmentedControl";
 export { SerifText } from "./SerifText";
