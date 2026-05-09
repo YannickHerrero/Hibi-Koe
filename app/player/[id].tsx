@@ -62,10 +62,6 @@ export default function PlayerScreen() {
   } | null>(null);
   const analysis = useAnalysis(track?.analysisState === "completed" ? track.id : null);
 
-  const onPlayLine = (startMs: number, endMs: number) => {
-    seekToMs(startMs);
-    void endMs;
-  };
   const onTokenSelect = (cue: AnalyzedCue, tokenIndex: number, matches: DictMatch[]) => {
     setDictTarget({ cue, tokenIndex, matches });
   };
@@ -111,7 +107,6 @@ export default function PlayerScreen() {
         analysis={analysis.analysis}
         positionMs={positionMs}
         onClose={() => setMiningOpen(false)}
-        onPlayLine={onPlayLine}
         onTokenSelect={onTokenSelect}
       />
 

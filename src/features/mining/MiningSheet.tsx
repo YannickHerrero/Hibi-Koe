@@ -3,7 +3,7 @@ import { Animated, Dimensions, Modal, Pressable, ScrollView, View } from "react-
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
 import { Display, Meta, Rule, SerifText } from "../../ui";
-import { seekToMs } from "../player";
+import { seekToMs, togglePlay, usePlaybackProgress } from "../player";
 import { getMatchesCoveringToken } from "./match";
 import { TokenChip } from "./TokenChip";
 import type { AnalysisData, AnalyzedCue, DictMatch } from "./types";
@@ -17,7 +17,6 @@ type Props = {
   // user has manually navigated.
   positionMs: number;
   onClose: () => void;
-  onPlayLine: (startMs: number, endMs: number) => void;
   onTokenSelect: (cue: AnalyzedCue, tokenIndex: number, matches: DictMatch[]) => void;
 };
 
@@ -43,16 +42,10 @@ function findCueIndexAt(cues: AnalyzedCue[], time: number): number {
   return candidate;
 }
 
-export function MiningSheet({
-  visible,
-  analysis,
-  positionMs,
-  onClose,
-  onPlayLine,
-  onTokenSelect,
-}: Props) {
+export function MiningSheet({ visible, analysis, positionMs, onClose, onTokenSelect }: Props) {
   const { furiganaOn } = useFurigana();
   const { matchUnderlineOn } = useMatchUnderline();
+  const { playing } = usePlaybackProgress();
   const insets = useSafeAreaInsets();
   const [mounted, setMounted] = useState(visible);
   const opacity = useRef(new Animated.Value(0)).current;
@@ -151,10 +144,6 @@ export function MiningSheet({
     setFollowing(true);
     setManualIndex(null);
   }, []);
-
-  const onPlayCurrentLine = useCallback(() => {
-    if (cue) onPlayLine(cue.startMs, cue.endMs);
-  }, [cue, onPlayLine]);
 
   const onTokenPress = useCallback(
     (idx: number) => {
@@ -257,8 +246,8 @@ export function MiningSheet({
                     >
                       <Meta style={styles.navLabel}>← Prev</Meta>
                     </Pressable>
-                    <Pressable onPress={onPlayCurrentLine} style={styles.playBtn} hitSlop={6}>
-                      <Meta style={styles.playLabel}>▶ Play line</Meta>
+                    <Pressable onPress={togglePlay} style={styles.playBtn} hitSlop={6}>
+                      <Meta style={styles.playLabel}>{playing ? "Pause" : "Play"}</Meta>
                     </Pressable>
                     <Pressable
                       onPress={onNext}
