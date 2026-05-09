@@ -4,9 +4,8 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { StyleSheet as RNStyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { configureAudioSession } from "../src/audio/session";
 import { initDb } from "../src/db";
 import { UpdatePrompt } from "../src/features/updates";
@@ -27,7 +26,6 @@ function RootLayoutInner() {
   const [fontsLoaded, fontsError] = useAppFonts();
   const [dbReady, setDbReady] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
-  const { theme } = useUnistyles();
 
   useEffect(() => {
     initDb()
@@ -46,8 +44,7 @@ function RootLayoutInner() {
   const ready = fontsLoaded && dbReady;
 
   // Always release the splash once we have a definitive state — either
-  // ready to render the app or a failure we can show on screen. Without
-  // this, a single rejected init promise leaves us stuck on the splash.
+  // ready to render the app or a failure we can show on screen.
   useEffect(() => {
     if (ready || initFailed) {
       SplashScreen.hideAsync().catch(() => {});
@@ -56,10 +53,10 @@ function RootLayoutInner() {
 
   if (initFailed) {
     return (
-      <View style={errorStyles.container}>
-        <Text style={errorStyles.title}>Hibi Koe failed to start.</Text>
-        {fontsError ? <Text style={errorStyles.body}>Fonts: {String(fontsError)}</Text> : null}
-        {dbError ? <Text style={errorStyles.body}>Database: {dbError}</Text> : null}
+      <View style={fallbackStyles.container}>
+        <Text style={fallbackStyles.title}>Hibi Koe failed to start.</Text>
+        {fontsError ? <Text style={fallbackStyles.body}>Fonts: {String(fontsError)}</Text> : null}
+        {dbError ? <Text style={fallbackStyles.body}>Database: {dbError}</Text> : null}
       </View>
     );
   }
@@ -70,11 +67,11 @@ function RootLayoutInner() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style={theme.name === "ink" ? "light" : "dark"} />
+      <StatusBar style="dark" />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: styles.content,
+          contentStyle: { backgroundColor: "#F4EBD9" },
         }}
       >
         <Stack.Screen name="(tabs)" />
@@ -96,28 +93,22 @@ function RootLayoutInner() {
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
-  content: {
-    backgroundColor: theme.colors.paper,
-  },
-}));
-
-const errorStyles = StyleSheet.create((theme) => ({
+// Plain RN StyleSheet — must work even when Unistyles is unhealthy.
+const fallbackStyles = RNStyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.paper,
-    padding: theme.space.s5,
+    backgroundColor: "#F4EBD9",
+    padding: 22,
     justifyContent: "center",
-    gap: theme.space.s3,
+    gap: 12,
   },
   title: {
-    fontFamily: theme.fonts.serif,
     fontSize: 24,
-    color: theme.colors.ink,
+    color: "#2B241B",
   },
   body: {
-    fontFamily: theme.fonts.mono,
+    fontFamily: "monospace",
     fontSize: 12,
-    color: theme.colors.inkSoft,
+    color: "#6B5E4E",
   },
-}));
+});
