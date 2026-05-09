@@ -1,7 +1,7 @@
 import { Pressable, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Meta, Rule, SerifText } from "../../ui";
-import { useFurigana } from "../mining";
+import { useFurigana, useMatchUnderline } from "../mining";
 import { ApiKeyField } from "./ApiKeyField";
 import { DictSetupCard } from "./DictSetupCard";
 
@@ -10,6 +10,7 @@ import { DictSetupCard } from "./DictSetupCard";
 // labelled block so the editorial № divider rhythm stays consistent.
 export function MiningSection() {
   const { furiganaOn, toggleFurigana } = useFurigana();
+  const { matchUnderlineOn, toggleMatchUnderline } = useMatchUnderline();
 
   return (
     <View style={styles.wrap}>
@@ -34,6 +35,17 @@ export function MiningSection() {
         <Pressable onPress={toggleFurigana} style={styles.toggleRow} hitSlop={6}>
           <SerifText>Show readings on the mining sheet</SerifText>
           <Meta style={furiganaOn ? styles.on : styles.off}>{furiganaOn ? "On" : "Off"}</Meta>
+        </Pressable>
+      </View>
+
+      <View style={styles.row}>
+        <Meta>Match underline</Meta>
+        <Rule variant="soft" style={styles.rule} />
+        <Pressable onPress={toggleMatchUnderline} style={styles.toggleRow} hitSlop={6}>
+          <SerifText>Underline tokens with a dictionary match</SerifText>
+          <Meta style={matchUnderlineOn ? styles.on : styles.off}>
+            {matchUnderlineOn ? "On" : "Off"}
+          </Meta>
         </Pressable>
       </View>
     </View>
