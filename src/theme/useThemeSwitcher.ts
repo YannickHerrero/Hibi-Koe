@@ -32,6 +32,13 @@ async function hydrateOnce() {
   }
 }
 
+// Public: lets the boot sequence apply the saved theme before any UI
+// renders, so the user never sees a flash of the default `paper` theme
+// during cold start.
+export function hydrateTheme(): Promise<void> {
+  return hydrateOnce();
+}
+
 export function useThemeSwitcher() {
   // useUnistyles() ensures the component re-renders when the theme switches.
   useUnistyles();
