@@ -1,7 +1,6 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
 import {
   type PickedAudio,
@@ -10,7 +9,7 @@ import {
   pickSubtitle,
   saveTrack,
 } from "../src/features/import";
-import { Button, Display, Label, Meta, Rule, SerifText } from "../src/ui";
+import { Button, Display, Label, Meta, Rule, SafeAreaView, SerifText } from "../src/ui";
 
 export default function ImportScreen() {
   const [audio, setAudio] = useState<PickedAudio | null>(null);
