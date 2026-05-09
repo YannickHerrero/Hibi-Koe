@@ -1,5 +1,6 @@
 export { Button } from "./Button";
 export { Display } from "./Display";
+export { ErrorBoundary } from "./ErrorBoundary";
 export { Field } from "./Field";
 export { Label } from "./Label";
 export { Masthead } from "./Masthead";

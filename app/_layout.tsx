@@ -11,10 +11,19 @@ import { configureAudioSession } from "../src/audio/session";
 import { initDb } from "../src/db";
 import { UpdatePrompt } from "../src/features/updates";
 import { useAppFonts } from "../src/theme/fonts";
+import { ErrorBoundary } from "../src/ui";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
+  return (
+    <ErrorBoundary>
+      <RootLayoutInner />
+    </ErrorBoundary>
+  );
+}
+
+function RootLayoutInner() {
   const [fontsLoaded, fontsError] = useAppFonts();
   const [dbReady, setDbReady] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
