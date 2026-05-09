@@ -1,10 +1,18 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
 import { getTrack, type Track, updateTrack } from "../../../src/db";
-import { Button, Display, Field, Label, Meta, Rule, SerifText } from "../../../src/ui";
+import {
+  Button,
+  Display,
+  Field,
+  Label,
+  Meta,
+  Rule,
+  SafeAreaView,
+  SerifText,
+} from "../../../src/ui";
 
 export default function EditTrackScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
