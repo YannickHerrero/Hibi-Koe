@@ -4,6 +4,12 @@
 // converts the raw JSON into our DictBundle shape, and persists the
 // serialised maps to Paths.document/dict/. Stages emit progress so the
 // Settings UI can render a sequence of bars / spinners.
+//
+// Heavy synchronous steps (gunzip on ~10 MB, JSON.parse on ~100 MB,
+// JSON.stringify on the serialised bundle) each get an explicit yield
+// to the event loop before they run so React can paint the new stage
+// label — without that the UI freezes on the last download tick for
+// 10–20 s and the install looks hung.
 
 import pako from "pako";
 import { convertJmdict, convertJmnedict } from "./convert";
@@ -13,9 +19,15 @@ import { extractFirstFile } from "./tar";
 export type InstallStage =
   | "fetching-release"
   | "downloading-jmdict"
+  | "decompressing-jmdict"
+  | "parsing-jmdict"
   | "processing-jmdict"
+  | "saving-jmdict"
   | "downloading-jmnedict"
+  | "decompressing-jmnedict"
+  | "parsing-jmnedict"
   | "processing-jmnedict"
+  | "saving-jmnedict"
   | "done";
 
 export type InstallProgress = {
@@ -79,6 +91,10 @@ function downloadTgzWithProgress(
   });
 }
 
+function nextTick(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 function tgzToJsonText(compressed: Uint8Array): string {
   const tar = pako.ungzip(compressed);
   const { data } = extractFirstFile(tar);
@@ -93,6 +109,7 @@ export async function installDictionaries(
   onProgress?.({ stage: "fetching-release" });
   const release = await fetchRelease();
 
+  // ── JMdict ─────────────────────────────────────────────────────────
   const jmdictAsset = findAsset(
     release,
     (n) => n.startsWith("jmdict-eng-") && !n.includes("-common-") && n.endsWith(".json.tgz"),
@@ -100,8 +117,17 @@ export async function installDictionaries(
   const jmdictTgz = await downloadTgzWithProgress(jmdictAsset, (received, total) => {
     onProgress?.({ stage: "downloading-jmdict", current: received, total, unit: "bytes" });
   });
-  onProgress?.({ stage: "processing-jmdict" });
-  const jmdictRaw = JSON.parse(tgzToJsonText(jmdictTgz)) as { words?: unknown[] };
+
+  onProgress?.({ stage: "decompressing-jmdict" });
+  await nextTick();
+  const jmdictTar = pako.ungzip(jmdictTgz);
+  const { data: jmdictJsonBytes } = extractFirstFile(jmdictTar);
+
+  onProgress?.({ stage: "parsing-jmdict" });
+  await nextTick();
+  const jmdictJsonText = new TextDecoder().decode(jmdictJsonBytes);
+  const jmdictRaw = JSON.parse(jmdictJsonText) as { words?: unknown[] };
+
   const jmdictBundle = await convertJmdict(
     // biome-ignore lint/suspicious/noExplicitAny: trusted release payload
     (jmdictRaw.words ?? []) as any[],
@@ -109,8 +135,12 @@ export async function installDictionaries(
       onProgress?.({ stage: "processing-jmdict", current, total, unit: "items" });
     },
   );
+
+  onProgress?.({ stage: "saving-jmdict" });
+  await nextTick();
   JMDICT_FILE.write(JSON.stringify(serializeBundle(jmdictBundle)));
 
+  // ── JMnedict ───────────────────────────────────────────────────────
   const jmnedictAsset = findAsset(
     release,
     (n) => n.startsWith("jmnedict-all-") && n.endsWith(".json.tgz"),
@@ -118,8 +148,17 @@ export async function installDictionaries(
   const jmnedictTgz = await downloadTgzWithProgress(jmnedictAsset, (received, total) => {
     onProgress?.({ stage: "downloading-jmnedict", current: received, total, unit: "bytes" });
   });
-  onProgress?.({ stage: "processing-jmnedict" });
-  const jmnedictRaw = JSON.parse(tgzToJsonText(jmnedictTgz)) as { words?: unknown[] };
+
+  onProgress?.({ stage: "decompressing-jmnedict" });
+  await nextTick();
+  const jmnedictTar = pako.ungzip(jmnedictTgz);
+  const { data: jmnedictJsonBytes } = extractFirstFile(jmnedictTar);
+
+  onProgress?.({ stage: "parsing-jmnedict" });
+  await nextTick();
+  const jmnedictJsonText = new TextDecoder().decode(jmnedictJsonBytes);
+  const jmnedictRaw = JSON.parse(jmnedictJsonText) as { words?: unknown[] };
+
   const jmnedictBundle = await convertJmnedict(
     // biome-ignore lint/suspicious/noExplicitAny: trusted release payload
     (jmnedictRaw.words ?? []) as any[],
@@ -127,7 +166,13 @@ export async function installDictionaries(
       onProgress?.({ stage: "processing-jmnedict", current, total, unit: "items" });
     },
   );
+
+  onProgress?.({ stage: "saving-jmnedict" });
+  await nextTick();
   JMNEDICT_FILE.write(JSON.stringify(serializeBundle(jmnedictBundle)));
 
   onProgress?.({ stage: "done" });
 }
+
+// Kept for parity with previous import path; not currently used here.
+void tgzToJsonText;

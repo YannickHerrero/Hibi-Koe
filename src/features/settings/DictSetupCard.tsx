@@ -15,18 +15,30 @@ function formatProgress(p: InstallProgress | null): string {
       return p.total
         ? `Downloading JMdict… ${formatBytes(p.current ?? 0)} / ${formatBytes(p.total)}`
         : "Downloading JMdict…";
+    case "decompressing-jmdict":
+      return "Decompressing JMdict… (this can take ~10s)";
+    case "parsing-jmdict":
+      return "Parsing JMdict JSON… (this can take ~10s)";
     case "processing-jmdict":
       return p.total
         ? `Indexing JMdict… ${(p.current ?? 0).toLocaleString()} / ${p.total.toLocaleString()}`
         : "Indexing JMdict…";
+    case "saving-jmdict":
+      return "Saving JMdict bundle…";
     case "downloading-jmnedict":
       return p.total
         ? `Downloading JMnedict… ${formatBytes(p.current ?? 0)} / ${formatBytes(p.total)}`
         : "Downloading JMnedict…";
+    case "decompressing-jmnedict":
+      return "Decompressing JMnedict… (this can take ~10s)";
+    case "parsing-jmnedict":
+      return "Parsing JMnedict JSON… (this can take ~15s)";
     case "processing-jmnedict":
       return p.total
         ? `Indexing JMnedict… ${(p.current ?? 0).toLocaleString()} / ${p.total.toLocaleString()}`
         : "Indexing JMnedict…";
+    case "saving-jmnedict":
+      return "Saving JMnedict bundle…";
     case "done":
       return "Done.";
   }
