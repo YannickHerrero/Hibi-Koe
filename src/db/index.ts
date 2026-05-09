@@ -14,6 +14,16 @@ export function initDb(): Promise<void> {
 }
 
 export {
+  clearDict,
+  type DictName,
+  dictHasRows,
+  getDictEntryPayloads,
+  insertDictEntriesBatch,
+  insertDictIndexBatch,
+  lookupEntryIds,
+  lookupEntryIdsBatch,
+} from "./dictRepo";
+export {
   deletePref,
   getOffsetPresets,
   getPref,

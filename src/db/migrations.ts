@@ -59,6 +59,28 @@ const migrations: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_saved_words_lemma ON saved_words (lemma);
     `,
   },
+  {
+    version: 3,
+    up: `
+      -- JMdict / JMnedict moved out of giant JSON files (which OOM'd
+      -- Android on file.text() for the ~250 MB JMnedict bundle) into
+      -- SQLite tables that we can query lazily.
+      CREATE TABLE IF NOT EXISTS dict_entries (
+        dict_name TEXT NOT NULL,
+        entry_id INTEGER NOT NULL,
+        payload_json TEXT NOT NULL,
+        PRIMARY KEY (dict_name, entry_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS dict_index (
+        form TEXT NOT NULL,
+        dict_name TEXT NOT NULL,
+        entry_id INTEGER NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_dict_index_form ON dict_index (form, dict_name);
+    `,
+  },
 ];
 
 export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
