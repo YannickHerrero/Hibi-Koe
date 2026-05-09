@@ -13,6 +13,7 @@ export {
   type PlaybackState,
   pause,
   play,
+  playTrackAt,
   seekToMs,
   setLoopMode,
   setRandomMode,

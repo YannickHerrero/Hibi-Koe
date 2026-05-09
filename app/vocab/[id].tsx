@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { getSavedWord, getTrack, type SavedWord, type Track } from "../../src/db";
-import { loadTrack, seekToMs } from "../../src/features/player";
+import { playTrackAt } from "../../src/features/player";
 import { Display, Label, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function VocabDetailScreen() {
@@ -33,8 +33,7 @@ export default function VocabDetailScreen() {
 
   const onPlayLine = () => {
     if (!word || !track) return;
-    loadTrack(track);
-    seekToMs(word.audioStartMs);
+    playTrackAt(track, word.audioStartMs);
   };
 
   return (

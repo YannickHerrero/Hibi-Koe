@@ -35,6 +35,12 @@ const initialState: PlaybackState = {
 let state: PlaybackState = initialState;
 let player: AudioPlayer | null = null;
 let statusSub: { remove: () => void } | null = null;
+// When set, the next status update that reports isLoaded will seek to
+// this position and start playback. Used by playTrackAt so callers can
+// jump to a saved cue on a freshly-created player without racing the
+// audio source's load.
+let pendingSeekMs: number | null = null;
+let pendingPlayAfterSeek = false;
 
 const listeners = new Set<() => void>();
 
@@ -123,6 +129,19 @@ export function loadTrack(track: Track): void {
       durationMs: status.duration > 0 ? Math.round(status.duration * 1000) : track.durationMs,
     });
 
+    if (pendingSeekMs !== null && status.isLoaded) {
+      const target = pendingSeekMs;
+      const shouldPlay = pendingPlayAfterSeek;
+      pendingSeekMs = null;
+      pendingPlayAfterSeek = false;
+      next
+        .seekTo(Math.max(0, target / 1000))
+        .then(() => {
+          if (shouldPlay) next.play();
+        })
+        .catch((err) => console.warn("[player] pending seek failed", err));
+    }
+
     // expo-audio's player.loop handles repeat natively when loopMode is on.
     // When loop is off and randomMode is on, pick another track from the
     // library and load it. Otherwise snap to 0 and stay paused so the
@@ -202,6 +221,24 @@ export function togglePlay(): void {
   } else {
     player.play();
   }
+}
+
+// Loads the track if not already current, then seeks to `ms` and plays.
+// Safe to call against a freshly-created player — the seek/play are
+// deferred until the audio source reports isLoaded.
+export function playTrackAt(track: Track, ms: number): void {
+  const alreadyLoaded = state.track?.id === track.id && player !== null;
+  if (!alreadyLoaded) {
+    pendingSeekMs = ms;
+    pendingPlayAfterSeek = true;
+    loadTrack(track);
+    return;
+  }
+  const p = player;
+  if (!p) return;
+  p.seekTo(Math.max(0, ms / 1000))
+    .then(() => p.play())
+    .catch((err) => console.warn("[player] playTrackAt seek failed", err));
 }
 
 export function seekToMs(ms: number): void {
