@@ -1,7 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
 import { getTrack, type Track, updateTrack } from "../../src/db";
 import { TrackArtwork } from "../../src/features/library";
@@ -15,7 +14,7 @@ import {
   usePlaybackProgress,
 } from "../../src/features/player";
 import { OffsetControl, SubtitlePane, useSubtitles } from "../../src/features/subtitles";
-import { Display, Meta, Rule, SerifText } from "../../src/ui";
+import { Display, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function PlayerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
