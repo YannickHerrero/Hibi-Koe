@@ -1,9 +1,8 @@
 import { router } from "expo-router";
 import { FlatList, Pressable, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
 import { openTrackContextMenu, TrackRow, useTracks } from "../../src/features/library";
-import { Display, Label, Masthead, Meta, Rule, SerifText } from "../../src/ui";
+import { Display, Label, Masthead, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function LibraryScreen() {
   const { tracks, error, refresh } = useTracks();
