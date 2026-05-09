@@ -78,6 +78,41 @@ export function buildMatches(tokens: Token[]): Record<number, DictMatch[]> {
   return out;
 }
 
+// Returns every DictMatch whose tokenSpan covers `tokenIndex`, regardless
+// of where the span starts. So tapping a token that lives inside a
+// multi-token compound (e.g. ない inside 食わない) surfaces the compound
+// match too, not only matches that start at that exact position.
+//
+// Sorted longest-first; ties: surface before lemma; jmdict before
+// jmnedict — same ordering as buildMatches' per-position lists.
+export function getMatchesCoveringToken(
+  matchesByTokenIndex: Record<number, DictMatch[]>,
+  tokenIndex: number,
+): DictMatch[] {
+  const seen = new Set<string>();
+  const out: DictMatch[] = [];
+  for (const key of Object.keys(matchesByTokenIndex)) {
+    const list = matchesByTokenIndex[Number(key)];
+    if (!list) continue;
+    for (const m of list) {
+      if (m.tokenSpan[0] <= tokenIndex && tokenIndex <= m.tokenSpan[1]) {
+        const id = `${m.dict}:${m.form}:${m.tokenSpan[0]}:${m.tokenSpan[1]}`;
+        if (seen.has(id)) continue;
+        seen.add(id);
+        out.push(m);
+      }
+    }
+  }
+  out.sort((a, b) => {
+    const lenA = a.tokenSpan[1] - a.tokenSpan[0];
+    const lenB = b.tokenSpan[1] - b.tokenSpan[0];
+    if (lenA !== lenB) return lenB - lenA;
+    if (a.source !== b.source) return a.source === "surface" ? -1 : 1;
+    return a.dict === b.dict ? 0 : a.dict === "jmdict" ? -1 : 1;
+  });
+  return out;
+}
+
 function pushMatch(
   out: DictMatch[],
   form: string,

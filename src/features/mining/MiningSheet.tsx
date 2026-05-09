@@ -3,6 +3,7 @@ import { Animated, Dimensions, Modal, Pressable, ScrollView, View } from "react-
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
 import { Display, Meta, Rule, SerifText } from "../../ui";
+import { getMatchesCoveringToken } from "./match";
 import { TokenChip } from "./TokenChip";
 import type { AnalysisData, AnalyzedCue, DictMatch } from "./types";
 import { useFurigana } from "./useFurigana";
@@ -111,6 +112,14 @@ export function MiningSheet({
 
   const cue: AnalyzedCue | null = focusedIndex >= 0 ? (cues[focusedIndex] ?? null) : null;
 
+  // Per-token covering matches — includes compound matches that don't
+  // start at this index but pass through it. Memoised per cue so the
+  // O(tokens × matches) walk doesn't run on every render.
+  const coveringByIndex = useMemo<DictMatch[][]>(() => {
+    if (!cue) return [];
+    return cue.tokens.map((_, i) => getMatchesCoveringToken(cue.matchesByTokenIndex, i));
+  }, [cue]);
+
   const onPrev = useCallback(() => {
     setFollowing(false);
     setManualIndex(Math.max(0, (focusedIndex < 0 ? 0 : focusedIndex) - 1));
@@ -133,10 +142,9 @@ export function MiningSheet({
   const onTokenPress = useCallback(
     (idx: number) => {
       if (!cue) return;
-      const matches = cue.matchesByTokenIndex[idx] ?? [];
-      onTokenSelect(cue, idx, matches);
+      onTokenSelect(cue, idx, coveringByIndex[idx] ?? []);
     },
-    [cue, onTokenSelect],
+    [cue, coveringByIndex, onTokenSelect],
   );
 
   const sheetStyle = [
@@ -199,7 +207,7 @@ export function MiningSheet({
                           token={token}
                           index={i}
                           showFurigana={furiganaOn}
-                          hasMatch={(cue.matchesByTokenIndex[i]?.length ?? 0) > 0}
+                          hasMatch={(coveringByIndex[i]?.length ?? 0) > 0}
                           active={false}
                           onPress={onTokenPress}
                         />

@@ -36,7 +36,7 @@ export {
   translateCues,
 } from "./llm";
 export { MiningSheet } from "./MiningSheet";
-export { buildMatches } from "./match";
+export { buildMatches, getMatchesCoveringToken } from "./match";
 export {
   authHeaders,
   OPENROUTER_BASE,
