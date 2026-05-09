@@ -6,6 +6,7 @@ import { getTrack, type Track, updateTrack } from "../../src/db";
 import { TrackArtwork } from "../../src/features/library";
 import {
   loadTrack,
+  PlayerSettingsModal,
   Scrubber,
   SpeedPicker,
   seekToMs,
@@ -13,7 +14,7 @@ import {
   useCurrentTrack,
   usePlaybackProgress,
 } from "../../src/features/player";
-import { SubtitlePane, SubtitleSettingsModal, useSubtitles } from "../../src/features/subtitles";
+import { SubtitlePane, useSubtitles } from "../../src/features/subtitles";
 import { Display, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function PlayerScreen() {
@@ -79,7 +80,7 @@ export default function PlayerScreen() {
       </View>
       <Rule variant="solid" />
 
-      <SubtitleSettingsModal
+      <PlayerSettingsModal
         visible={settingsOpen}
         valueMs={offsetMs}
         onChange={setOffsetMs}

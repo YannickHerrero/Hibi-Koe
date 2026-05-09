@@ -8,6 +8,5 @@ export { OffsetControl } from "./OffsetControl";
 export { OffsetPresetSlot } from "./OffsetPresetSlot";
 export { SubtitleLine } from "./SubtitleLine";
 export { SubtitlePane } from "./SubtitlePane";
-export { SubtitleSettingsModal } from "./SubtitleSettingsModal";
 export { type Cue, parseSrt } from "./srt";
 export { useSubtitles } from "./useSubtitles";

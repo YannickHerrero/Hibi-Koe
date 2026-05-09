@@ -3,8 +3,8 @@ import { Animated, Dimensions, Modal, Pressable, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { getOffsetPresets, type OffsetPresets, setOffsetPresets } from "../../db";
 import { Display, Label, Meta, Rule } from "../../ui";
-import { OffsetControl } from "./OffsetControl";
-import { OffsetPresetSlot } from "./OffsetPresetSlot";
+import { OffsetControl } from "../subtitles/OffsetControl";
+import { OffsetPresetSlot } from "../subtitles/OffsetPresetSlot";
 
 type Props = {
   visible: boolean;
@@ -17,7 +17,7 @@ const SCREEN_HEIGHT = Dimensions.get("window").height;
 const FADE_DURATION = 200;
 const SLIDE_DURATION = 260;
 
-export function SubtitleSettingsModal({ visible, valueMs, onChange, onClose }: Props) {
+export function PlayerSettingsModal({ visible, valueMs, onChange, onClose }: Props) {
   const [presets, setPresets] = useState<OffsetPresets | null>(null);
   // Mount the Modal a bit longer than `visible` so we can play the
   // outgoing animation before unmounting.
