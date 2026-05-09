@@ -3,6 +3,7 @@ import { Animated, Dimensions, Modal, Pressable, ScrollView, View } from "react-
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
 import { Display, Meta, Rule, SerifText } from "../../ui";
+import { seekToMs } from "../player";
 import { getMatchesCoveringToken } from "./match";
 import { TokenChip } from "./TokenChip";
 import type { AnalysisData, AnalyzedCue, DictMatch } from "./types";
@@ -122,15 +123,29 @@ export function MiningSheet({
     return cue.tokens.map((_, i) => getMatchesCoveringToken(cue.matchesByTokenIndex, i));
   }, [cue]);
 
+  // Prev/Next seek the player to the target cue's startMs and resume
+  // auto-follow so the sheet tracks the new playback position. The
+  // user almost always wants 'jump to that cue' rather than just
+  // 'preview the line text', so navigation and audio stay in sync.
   const onPrev = useCallback(() => {
-    setFollowing(false);
-    setManualIndex(Math.max(0, (focusedIndex < 0 ? 0 : focusedIndex) - 1));
-  }, [focusedIndex]);
+    if (cues.length === 0) return;
+    const target = Math.max(0, (focusedIndex < 0 ? 0 : focusedIndex) - 1);
+    const cue = cues[target];
+    if (!cue) return;
+    seekToMs(cue.startMs);
+    setFollowing(true);
+    setManualIndex(null);
+  }, [cues, focusedIndex]);
 
   const onNext = useCallback(() => {
-    setFollowing(false);
-    setManualIndex(Math.min(total - 1, (focusedIndex < 0 ? -1 : focusedIndex) + 1));
-  }, [focusedIndex, total]);
+    if (cues.length === 0) return;
+    const target = Math.min(cues.length - 1, (focusedIndex < 0 ? -1 : focusedIndex) + 1);
+    const cue = cues[target];
+    if (!cue) return;
+    seekToMs(cue.startMs);
+    setFollowing(true);
+    setManualIndex(null);
+  }, [cues, focusedIndex]);
 
   const onResume = useCallback(() => {
     setFollowing(true);
