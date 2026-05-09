@@ -1,71 +1,83 @@
-// Ported from Pureyaa src/analysis/dict.ts. Hibi Koe stores the bundles
-// under Paths.document/dict/ alongside any other persistent app data.
+// SQLite-backed JMdict / JMnedict access. Replaces the previous
+// JSON-file bundle which OOM'd Android on file.text() for the
+// ~250 MB JMnedict payload.
 //
-// Bundles are kept in JS Maps (not plain objects) because Hermes caps a
-// single object at 196,607 properties — JMnedict alone has ~750k.
+// All accessors are async; lookups go through dict_index, payloads
+// come from dict_entries on demand.
 
 import { Directory, File, Paths } from "expo-file-system";
+import { dictHasRows, getDictEntryPayloads, lookupEntryIds, lookupEntryIdsBatch } from "../../db";
 import type { DictBundle, DictEntry, DictName, SerializedDictBundle } from "./types";
 
+// Legacy file locations — only kept so the installer can clean up the
+// old JSON bundles on a re-install.
 export const DICT_DIR = new Directory(Paths.document, "dict");
 export const JMDICT_FILE = new File(DICT_DIR, "jmdict.dict");
 export const JMNEDICT_FILE = new File(DICT_DIR, "jmnedict.dict");
 
-let jmdict: DictBundle | null = null;
-let jmnedict: DictBundle | null = null;
-
-const EMPTY: DictBundle = { index: new Map(), entries: new Map() };
-
-async function loadFromFile(file: File): Promise<DictBundle> {
-  try {
-    if (!file.exists) return EMPTY;
-    const text = await file.text();
-    const parsed = JSON.parse(text) as SerializedDictBundle;
-    return {
-      index: new Map(parsed.index),
-      entries: new Map(parsed.entries),
-    };
-  } catch (err) {
-    console.warn("[mining] failed to read dictionary file", file.uri, err);
-    return EMPTY;
-  }
-}
-
+// No-op now — left in place so callers compile while we migrate.
+// SQLite is always available once migrations have run.
 export async function loadDictionaries(): Promise<void> {
-  if (!jmdict) jmdict = await loadFromFile(JMDICT_FILE);
-  if (!jmnedict) jmnedict = await loadFromFile(JMNEDICT_FILE);
+  return;
 }
 
 export function unloadDictionaries(): void {
-  jmdict = null;
-  jmnedict = null;
+  return;
 }
 
-export function dictsAvailable(): boolean {
-  return JMDICT_FILE.exists && JMNEDICT_FILE.exists;
+export async function dictsAvailable(): Promise<boolean> {
+  const [a, b] = await Promise.all([dictHasRows("jmdict"), dictHasRows("jmnedict")]);
+  return a && b;
 }
 
-export function isLoaded(): boolean {
-  return jmdict !== null && jmnedict !== null;
+// Quick boolean for sync paths (e.g. import wizard's pre-flight). The
+// async dictsAvailable() is the source of truth; this is a cached
+// snapshot that becomes accurate after a one-shot warmup call.
+let cachedAvailable = false;
+export function dictsAvailableSync(): boolean {
+  return cachedAvailable;
+}
+export async function refreshDictsAvailableCache(): Promise<boolean> {
+  cachedAvailable = await dictsAvailable();
+  return cachedAvailable;
 }
 
-export function lookup(form: string, dict: DictName): number[] {
-  const bundle = dict === "jmdict" ? jmdict : jmnedict;
-  if (!bundle) return [];
-  return bundle.index.get(form) ?? [];
+// Returns true once the runtime has confirmed the dict tables are
+// populated. Mirrors the old isLoaded() boolean for callers that just
+// want a guard.
+export async function isLoaded(): Promise<boolean> {
+  return dictsAvailable();
 }
 
-export function getEntries(ids: number[], dict: DictName): DictEntry[] {
-  const bundle = dict === "jmdict" ? jmdict : jmnedict;
-  if (!bundle) return [];
+export async function lookup(form: string, dict: DictName): Promise<number[]> {
+  return lookupEntryIds(form, dict);
+}
+
+export async function lookupBatch(
+  forms: ReadonlyArray<string>,
+  dict: DictName,
+): Promise<Map<string, number[]>> {
+  return lookupEntryIdsBatch(forms, dict);
+}
+
+export async function getEntries(ids: ReadonlyArray<number>, dict: DictName): Promise<DictEntry[]> {
+  if (ids.length === 0) return [];
+  const payloads = await getDictEntryPayloads(dict, ids);
   const out: DictEntry[] = [];
   for (const id of ids) {
-    const e = bundle.entries.get(id);
-    if (e) out.push(e);
+    const payload = payloads.get(id);
+    if (!payload) continue;
+    try {
+      out.push(JSON.parse(payload) as DictEntry);
+    } catch (err) {
+      console.warn("[mining] failed to parse dict entry", dict, id, err);
+    }
   }
   return out;
 }
 
+// Kept for parity with the older API; serialising bundles is no longer
+// part of the install path but the helper is fine to keep around.
 export function serializeBundle(bundle: DictBundle): SerializedDictBundle {
   return {
     index: Array.from(bundle.index.entries()),

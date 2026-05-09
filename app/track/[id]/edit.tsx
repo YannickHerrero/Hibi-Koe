@@ -53,7 +53,9 @@ export default function EditTrackScreen() {
   const [reqs, setReqs] = useState<{ key: boolean; dict: boolean }>({ key: false, dict: false });
 
   useEffect(() => {
-    hasApiKey().then((key) => setReqs((s) => ({ ...s, key, dict: dictsAvailable() })));
+    Promise.all([hasApiKey(), dictsAvailable()])
+      .then(([key, dict]) => setReqs({ key, dict }))
+      .catch((err) => console.error("[track-edit] mining-reqs probe failed", err));
   }, []);
 
   useEffect(() => {

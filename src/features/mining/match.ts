@@ -10,17 +10,17 @@
 //     or i-adjective and every following token is an auxiliary verb
 //     or particle. We look up the FIRST token's lemma (kuromoji's
 //     basic_form) and emit a match for that, with the span covering
-//     the whole conjugated form. This is what makes tapping "食わ"
-//     in "食わない" surface 食う as a 2-token match instead of just
-//     a 1-token lemma match — closer to Yomitan's deconjugation.
+//     the whole conjugated form. Closer to Yomitan's deconjugation.
 //
 // On the single-token case we also try the lemma directly (covers
 // stand-alone conjugated forms with no trailing aux).
 //
-// Output map keyed by start-token-index, list sorted longest-first;
-// surface beats lemma on ties; jmdict beats jmnedict.
+// The matcher is async because the dict lives in SQLite. We
+// pre-collect every candidate form per cue and run two batched
+// lookups (one per dict), so the cost is two queries per cue
+// regardless of token count.
 
-import { lookup } from "./dict";
+import { lookupBatch } from "./dict";
 import type { DictMatch, Token } from "./types";
 
 const COMPOUND_WINDOW = 5;
@@ -37,54 +37,112 @@ function isConjugatedHead(slice: Token[]): boolean {
   return true;
 }
 
-export function buildMatches(tokens: Token[]): Record<number, DictMatch[]> {
-  const out: Record<number, DictMatch[]> = {};
+type Candidate = {
+  form: string;
+  source: "surface" | "lemma";
+  start: number;
+  end: number;
+};
+
+export async function buildMatches(tokens: Token[]): Promise<Record<number, DictMatch[]>> {
+  // Collect every (form, source, span) we'd want to look up, then run
+  // one batched lookup per dict to resolve all of them in a single
+  // SQLite round trip per dict.
+  const candidates: Candidate[] = [];
   for (let i = 0; i < tokens.length; i++) {
-    const matches: DictMatch[] = [];
     const maxSpan = Math.min(COMPOUND_WINDOW, tokens.length - i);
     for (let span = maxSpan; span >= 1; span--) {
       const slice = tokens.slice(i, i + span);
       const surfaceForm = slice.map((t) => t.surface).join("");
-      pushMatch(matches, surfaceForm, "surface", i, i + span - 1);
-
-      // Conjugated-head: first is a verb / adjective, rest are aux.
-      // Look up the first token's dictionary form.
+      if (surfaceForm) {
+        candidates.push({ form: surfaceForm, source: "surface", start: i, end: i + span - 1 });
+      }
       if (span >= 2 && isConjugatedHead(slice)) {
         const headLemma = slice[0].lemma;
         if (headLemma && headLemma !== surfaceForm) {
-          pushMatch(matches, headLemma, "lemma", i, i + span - 1);
+          candidates.push({ form: headLemma, source: "lemma", start: i, end: i + span - 1 });
         }
       }
-
       if (span === 1) {
         const lemma = slice[0].lemma;
         if (lemma && lemma !== surfaceForm) {
-          pushMatch(matches, lemma, "lemma", i, i + span - 1);
+          candidates.push({ form: lemma, source: "lemma", start: i, end: i + span - 1 });
         }
       }
     }
-    if (matches.length > 0) {
-      // longest-first; ties: surface before lemma; jmdict before jmnedict
-      matches.sort((a, b) => {
-        const lenA = a.tokenSpan[1] - a.tokenSpan[0];
-        const lenB = b.tokenSpan[1] - b.tokenSpan[0];
-        if (lenA !== lenB) return lenB - lenA;
-        if (a.source !== b.source) return a.source === "surface" ? -1 : 1;
-        return a.dict === b.dict ? 0 : a.dict === "jmdict" ? -1 : 1;
+  }
+
+  const formSet = new Set<string>();
+  for (const c of candidates) formSet.add(c.form);
+  const forms = Array.from(formSet);
+
+  const [jmdict, jmnedict] = await Promise.all([
+    lookupBatch(forms, "jmdict"),
+    lookupBatch(forms, "jmnedict"),
+  ]);
+
+  const out: Record<number, DictMatch[]> = {};
+  for (const c of candidates) {
+    const jm = jmdict.get(c.form);
+    if (jm && jm.length > 0) {
+      pushUnique(out, c.start, {
+        tokenSpan: [c.start, c.end],
+        form: c.form,
+        source: c.source,
+        dict: "jmdict",
+        entryIds: jm,
       });
-      out[i] = matches;
+    }
+    const jn = jmnedict.get(c.form);
+    if (jn && jn.length > 0) {
+      pushUnique(out, c.start, {
+        tokenSpan: [c.start, c.end],
+        form: c.form,
+        source: c.source,
+        dict: "jmnedict",
+        entryIds: jn,
+      });
     }
   }
+
+  for (const startStr of Object.keys(out)) {
+    const list = out[Number(startStr)];
+    if (!list) continue;
+    list.sort((a, b) => {
+      const lenA = a.tokenSpan[1] - a.tokenSpan[0];
+      const lenB = b.tokenSpan[1] - b.tokenSpan[0];
+      if (lenA !== lenB) return lenB - lenA;
+      if (a.source !== b.source) return a.source === "surface" ? -1 : 1;
+      return a.dict === b.dict ? 0 : a.dict === "jmdict" ? -1 : 1;
+    });
+  }
   return out;
+}
+
+function pushUnique(bucket: Record<number, DictMatch[]>, start: number, match: DictMatch): void {
+  let list = bucket[start];
+  if (!list) {
+    list = [];
+    bucket[start] = list;
+  }
+  if (
+    list.some(
+      (m) =>
+        m.form === match.form &&
+        m.dict === match.dict &&
+        m.tokenSpan[0] === match.tokenSpan[0] &&
+        m.tokenSpan[1] === match.tokenSpan[1],
+    )
+  ) {
+    return;
+  }
+  list.push(match);
 }
 
 // Returns every DictMatch whose tokenSpan covers `tokenIndex`, regardless
 // of where the span starts. So tapping a token that lives inside a
 // multi-token compound (e.g. ない inside 食わない) surfaces the compound
 // match too, not only matches that start at that exact position.
-//
-// Sorted longest-first; ties: surface before lemma; jmdict before
-// jmnedict — same ordering as buildMatches' per-position lists.
 export function getMatchesCoveringToken(
   matchesByTokenIndex: Record<number, DictMatch[]>,
   tokenIndex: number,
@@ -111,39 +169,4 @@ export function getMatchesCoveringToken(
     return a.dict === b.dict ? 0 : a.dict === "jmdict" ? -1 : 1;
   });
   return out;
-}
-
-function pushMatch(
-  out: DictMatch[],
-  form: string,
-  source: "surface" | "lemma",
-  start: number,
-  end: number,
-): void {
-  if (!form) return;
-  // Skip duplicates: same form at the same span produced twice (e.g.
-  // a verb whose lemma equals its surface).
-  if (out.some((m) => m.form === form && m.tokenSpan[0] === start && m.tokenSpan[1] === end)) {
-    return;
-  }
-  const jmdictHits = lookup(form, "jmdict");
-  if (jmdictHits.length > 0) {
-    out.push({
-      tokenSpan: [start, end],
-      form,
-      source,
-      dict: "jmdict",
-      entryIds: jmdictHits,
-    });
-  }
-  const jmnedictHits = lookup(form, "jmnedict");
-  if (jmnedictHits.length > 0) {
-    out.push({
-      tokenSpan: [start, end],
-      form,
-      source,
-      dict: "jmnedict",
-      entryIds: jmnedictHits,
-    });
-  }
 }

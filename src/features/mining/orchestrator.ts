@@ -71,7 +71,7 @@ export async function analyzeTrack(opts: AnalyzeOptions): Promise<AnalysisData> 
       if (signal?.aborted) throw new Error("Cancelled");
       const rc = rawCues[i];
       const tokens = await tokenize(rc.text);
-      const matches = buildMatches(tokens);
+      const matches = await buildMatches(tokens);
       cues.push({
         index: rc.index,
         startMs: rc.startMs,

@@ -75,7 +75,7 @@ export default function ImportScreen() {
     try {
       const track = await saveTrack({ audio, subtitle });
 
-      if (track.subtitlePath && (await hasApiKey()) && dictsAvailable()) {
+      if (track.subtitlePath && (await hasApiKey()) && (await dictsAvailable())) {
         setPhase("analyzing");
         await analyzeTrack({
           trackId: track.id,

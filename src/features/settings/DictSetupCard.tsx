@@ -56,7 +56,11 @@ export function DictSetupCard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (dictsAvailable()) setPhase("ready");
+    dictsAvailable()
+      .then((ok) => {
+        if (ok) setPhase("ready");
+      })
+      .catch((err) => console.error("[mining] dictsAvailable check failed", err));
   }, []);
 
   const onInstall = async () => {

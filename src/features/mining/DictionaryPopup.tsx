@@ -63,9 +63,13 @@ export function DictionaryPopup({
       try {
         await loadDictionaries();
         if (cancelled) return;
-        const out: ResolvedMatch[] = matches.map((m) => ({
+        const resolvedEntries = await Promise.all(
+          matches.map((m) => getEntries(m.entryIds, m.dict)),
+        );
+        if (cancelled) return;
+        const out: ResolvedMatch[] = matches.map((m, i) => ({
           ...m,
-          entries: getEntries(m.entryIds, m.dict),
+          entries: resolvedEntries[i],
         }));
         setResolved(out);
       } catch (err) {
