@@ -2,6 +2,7 @@
 // needs the Unistyles runtime configured before evaluation.
 import "../../theme/unistyles";
 
+export { clearApiKey, getApiKey, hasApiKey, setApiKey } from "./apiKey";
 export {
   DICT_DIR,
   dictsAvailable,
