@@ -4,6 +4,7 @@ import { Pressable, ScrollView, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { getSavedWord, getTrack, type SavedWord, type Track } from "../../src/db";
 import { playTrackAt } from "../../src/features/player";
+import { syncSavedWord } from "../../src/features/mining";
 import { Display, Label, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function VocabDetailScreen() {
@@ -34,6 +35,23 @@ export default function VocabDetailScreen() {
   const onPlayLine = () => {
     if (!word || !track) return;
     playTrackAt(track, word.audioStartMs, word.audioEndMs);
+  };
+
+  const [retrying, setRetrying] = useState(false);
+  const onRetrySync = async () => {
+    if (!word) return;
+    setRetrying(true);
+    try {
+      await syncSavedWord(word.id);
+      const refreshed = await getSavedWord(word.id);
+      if (refreshed) setWord(refreshed);
+    } catch (err) {
+      console.error("[vocab-detail] retry sync failed", err);
+      const refreshed = await getSavedWord(word.id);
+      if (refreshed) setWord(refreshed);
+    } finally {
+      setRetrying(false);
+    }
   };
 
   return (
@@ -107,6 +125,27 @@ export default function VocabDetailScreen() {
                 The source track for this entry has been deleted; audio playback is unavailable.
               </SerifText>
             )}
+
+            {word.syncState === "failed" ? (
+              <View style={styles.section}>
+                <Label num="№ 04">Hibi sync</Label>
+                <Rule variant="soft" style={styles.rule} />
+                <SerifText soft italic>
+                  {word.syncError ?? "Unknown error"}
+                </SerifText>
+                <View style={styles.actions}>
+                  <Pressable onPress={onRetrySync} style={styles.retryBtn} hitSlop={6} disabled={retrying}>
+                    <Meta style={styles.retryLabel}>{retrying ? "Retrying…" : "Retry sync"}</Meta>
+                  </Pressable>
+                </View>
+              </View>
+            ) : word.syncState === "synced" ? (
+              <View style={styles.section}>
+                <Label num="№ 04">Hibi sync</Label>
+                <Rule variant="soft" style={styles.rule} />
+                <SerifText soft>Synced to Hibi.</SerifText>
+              </View>
+            ) : null}
           </>
         ) : (
           <SerifText soft italic>
@@ -167,5 +206,14 @@ const styles = StyleSheet.create((theme) => ({
   },
   playLabel: {
     color: theme.colors.paper,
+  },
+  retryBtn: {
+    paddingHorizontal: theme.space.s4,
+    paddingVertical: theme.space.s2,
+    borderWidth: 1,
+    borderColor: theme.colors.ink,
+  },
+  retryLabel: {
+    color: theme.colors.ink,
   },
 }));
