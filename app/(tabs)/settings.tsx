@@ -1,5 +1,8 @@
-import { ScrollView, View } from "react-native";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import { Pressable, ScrollView, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
+import { countSavedWords } from "../../src/db";
 import {
   formatBytes,
   MiningSection,
@@ -10,6 +13,13 @@ import { Display, Label, Masthead, Meta, Rule, SafeAreaView, SerifText } from ".
 
 export default function SettingsScreen() {
   const usage = useStorageUsage();
+  const [vocabCount, setVocabCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    countSavedWords()
+      .then(setVocabCount)
+      .catch((err) => console.error("[settings] countSavedWords failed", err));
+  }, []);
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
@@ -30,7 +40,19 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Label num="№ 03">Storage</Label>
+          <Label num="№ 03">Vocabulary</Label>
+          <Rule variant="soft" style={styles.rule} />
+          <View style={styles.kv}>
+            <Meta>Saved entries</Meta>
+            <SerifText>{vocabCount ?? "—"}</SerifText>
+          </View>
+          <Pressable onPress={() => router.push("/vocab" as never)} hitSlop={6}>
+            <Meta style={styles.action}>View all →</Meta>
+          </Pressable>
+        </View>
+
+        <View style={styles.section}>
+          <Label num="№ 04">Storage</Label>
           <Rule variant="soft" style={styles.rule} />
           <View style={styles.kv}>
             <Meta>Tracks</Meta>
@@ -43,7 +65,7 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Label num="№ 04">About</Label>
+          <Label num="№ 05">About</Label>
           <Rule variant="soft" style={styles.rule} />
           <SerifText soft italic>
             Hibi Koe — passive listening immersion. Part of the Hibi ecosystem; the design system is
@@ -78,5 +100,8 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
     alignItems: "baseline",
     paddingVertical: theme.space.s2,
+  },
+  action: {
+    color: theme.colors.accent,
   },
 }));
