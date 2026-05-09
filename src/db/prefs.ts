@@ -7,7 +7,8 @@ export type PrefKey =
   | "subtitleOffsetPresets"
   | "loopMode"
   | "randomMode"
-  | "furiganaOn";
+  | "furiganaOn"
+  | "matchUnderlineOn";
 
 export async function getPref(key: PrefKey): Promise<string | null> {
   const db = await getDb();

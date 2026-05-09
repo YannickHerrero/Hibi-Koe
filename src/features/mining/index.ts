@@ -64,4 +64,5 @@ export type {
 } from "./types";
 export { useAnalysis } from "./useAnalysis";
 export { hydrateFurigana, useFurigana } from "./useFurigana";
+export { hydrateMatchUnderline, useMatchUnderline } from "./useMatchUnderline";
 export { useSavedWords } from "./useSavedWords";
