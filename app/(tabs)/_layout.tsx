@@ -14,6 +14,8 @@ export default function TabsLayout() {
           tabBarActiveTintColor: theme.colors.ink,
           tabBarInactiveTintColor: theme.colors.inkFaint,
           tabBarLabelStyle: styles.label,
+          tabBarIconStyle: styles.icon,
+          tabBarLabelPosition: "beside-icon",
         }}
       >
         <Tabs.Screen name="index" options={{ title: "Library" }} />
@@ -35,12 +37,15 @@ const styles = StyleSheet.create((theme) => ({
     borderTopColor: theme.colors.ink,
     elevation: 0,
     shadowOpacity: 0,
-    height: 64,
+    height: 56,
   },
   label: {
     fontFamily: theme.fonts.mono,
     fontSize: theme.typography.mono.xs,
     letterSpacing: theme.typography.mono.xs * theme.tracking.monoWide,
     textTransform: "uppercase",
+  },
+  icon: {
+    display: "none",
   },
 }));
