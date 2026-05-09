@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Modal, Pressable, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Animated, Dimensions, Modal, Pressable, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { getOffsetPresets, type OffsetPresets, setOffsetPresets } from "../../db";
 import { Display, Label, Meta, Rule } from "../../ui";
@@ -13,8 +13,17 @@ type Props = {
   onClose: () => void;
 };
 
+const SCREEN_HEIGHT = Dimensions.get("window").height;
+const FADE_DURATION = 200;
+const SLIDE_DURATION = 260;
+
 export function SubtitleSettingsModal({ visible, valueMs, onChange, onClose }: Props) {
   const [presets, setPresets] = useState<OffsetPresets | null>(null);
+  // Mount the Modal a bit longer than `visible` so we can play the
+  // outgoing animation before unmounting.
+  const [mounted, setMounted] = useState(visible);
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
   // Load on first open; subsequent opens reuse cached state.
   useEffect(() => {
@@ -23,6 +32,40 @@ export function SubtitleSettingsModal({ visible, valueMs, onChange, onClose }: P
       .then(setPresets)
       .catch((err) => console.error("[subtitle-settings] getOffsetPresets failed", err));
   }, [visible, presets]);
+
+  // Drive backdrop fade and sheet slide independently.
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: FADE_DURATION,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: SLIDE_DURATION,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: FADE_DURATION,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: SCREEN_HEIGHT,
+          duration: SLIDE_DURATION,
+          useNativeDriver: true,
+        }),
+      ]).start(({ finished }) => {
+        if (finished) setMounted(false);
+      });
+    }
+  }, [visible, opacity, translateY]);
 
   const persist = useCallback((next: OffsetPresets) => {
     setPresets(next);
@@ -60,49 +103,53 @@ export function SubtitleSettingsModal({ visible, valueMs, onChange, onClose }: P
 
   return (
     <Modal
-      visible={visible}
-      animationType="slide"
+      visible={mounted}
+      animationType="none"
       transparent
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        {/* Stop propagation so taps on the sheet don't close it. */}
-        <Pressable style={styles.sheet} onPress={() => {}}>
-          <View style={styles.headerRow}>
-            <Display size="md">Subtitle delay</Display>
-            <Pressable onPress={onClose} hitSlop={12}>
-              <Meta style={styles.close}>Done</Meta>
-            </Pressable>
-          </View>
-          <Rule variant="solid" style={styles.rule} />
+      <Animated.View style={[styles.backdrop, { opacity }]}>
+        <Pressable style={styles.backdropTouchable} onPress={onClose}>
+          {/* Stop propagation: taps on the sheet shouldn't close it. */}
+          <Pressable onPress={() => {}}>
+            <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
+              <View style={styles.headerRow}>
+                <Display size="md">Subtitle delay</Display>
+                <Pressable onPress={onClose} hitSlop={12}>
+                  <Meta style={styles.close}>Done</Meta>
+                </Pressable>
+              </View>
+              <Rule variant="solid" style={styles.rule} />
 
-          <View style={styles.section}>
-            <Label num="№ 01">Adjust</Label>
-            <Rule variant="soft" style={styles.softRule} />
-            <OffsetControl valueMs={valueMs} onChange={onChange} />
-          </View>
+              <View style={styles.section}>
+                <Label num="№ 01">Adjust</Label>
+                <Rule variant="soft" style={styles.softRule} />
+                <OffsetControl valueMs={valueMs} onChange={onChange} />
+              </View>
 
-          <View style={styles.section}>
-            <Label num="№ 02">Presets</Label>
-            <Rule variant="soft" style={styles.softRule} />
-            <View style={styles.slots}>
-              {(presets ?? Array.from({ length: 5 }, () => null)).map((slotValue, i) => (
-                <OffsetPresetSlot
-                  // biome-ignore lint/suspicious/noArrayIndexKey: slot position IS the identity
-                  key={`slot-${i}`}
-                  index={i}
-                  valueMs={slotValue}
-                  onApply={onApply}
-                  onSave={onSave}
-                  onClear={onClear}
-                />
-              ))}
-            </View>
-            <Meta style={styles.hint}>Tap to apply · long-press to clear</Meta>
-          </View>
+              <View style={styles.section}>
+                <Label num="№ 02">Presets</Label>
+                <Rule variant="soft" style={styles.softRule} />
+                <View style={styles.slots}>
+                  {(presets ?? Array.from({ length: 5 }, () => null)).map((slotValue, i) => (
+                    <OffsetPresetSlot
+                      // biome-ignore lint/suspicious/noArrayIndexKey: slot position IS the identity
+                      key={`slot-${i}`}
+                      index={i}
+                      valueMs={slotValue}
+                      onApply={onApply}
+                      onSave={onSave}
+                      onClear={onClear}
+                    />
+                  ))}
+                </View>
+                <Meta style={styles.hint}>Tap to apply · long-press to clear</Meta>
+              </View>
+            </Animated.View>
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </Animated.View>
     </Modal>
   );
 }
@@ -111,6 +158,9 @@ const styles = StyleSheet.create((theme) => ({
   backdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  backdropTouchable: {
+    flex: 1,
     justifyContent: "flex-end",
   },
   sheet: {
