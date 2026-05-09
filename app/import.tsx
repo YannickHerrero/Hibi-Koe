@@ -44,7 +44,7 @@ export default function ImportScreen() {
     setSaving(true);
     try {
       await saveTrack({ audio, subtitle });
-      router.replace("/library");
+      router.replace("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setSaving(false);
