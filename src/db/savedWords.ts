@@ -1,5 +1,7 @@
 import { getDb } from "./client";
 
+export type SyncState = "pending" | "syncing" | "synced" | "failed";
+
 export type SavedWord = {
   id: string;
   trackId: string;
@@ -18,6 +20,8 @@ export type SavedWord = {
   artworkPath: string | null;
   createdAt: number;
   exportedAt: number | null;
+  syncState: SyncState | null;
+  syncError: string | null;
 };
 
 type Row = {
@@ -38,6 +42,8 @@ type Row = {
   artwork_path: string | null;
   created_at: number;
   exported_at: number | null;
+  sync_state: SyncState | null;
+  sync_error: string | null;
 };
 
 function fromRow(row: Row): SavedWord {
@@ -66,10 +72,15 @@ function fromRow(row: Row): SavedWord {
     artworkPath: row.artwork_path,
     createdAt: row.created_at,
     exportedAt: row.exported_at,
+    syncState: row.sync_state,
+    syncError: row.sync_error,
   };
 }
 
-export type NewSavedWord = Omit<SavedWord, "createdAt" | "exportedAt">;
+export type NewSavedWord = Omit<
+  SavedWord,
+  "createdAt" | "exportedAt" | "syncState" | "syncError"
+>;
 
 export async function listSavedWords(): Promise<SavedWord[]> {
   const db = await getDb();
@@ -116,7 +127,45 @@ export async function insertSavedWord(word: NewSavedWord): Promise<SavedWord> {
     word.artworkPath,
     createdAt,
   );
-  return { ...word, createdAt, exportedAt: null };
+  return { ...word, createdAt, exportedAt: null, syncState: null, syncError: null };
+}
+
+export async function listUnsyncedSavedWords(): Promise<SavedWord[]> {
+  const db = await getDb();
+  const rows = await db.getAllAsync<Row>(
+    `SELECT * FROM saved_words
+     WHERE sync_state IS NULL OR sync_state IN ('pending', 'failed')
+     ORDER BY created_at ASC;`,
+  );
+  return rows.map(fromRow);
+}
+
+export async function markSavedWordSyncing(id: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE saved_words SET sync_state = 'syncing', sync_error = NULL WHERE id = ?;`,
+    id,
+  );
+}
+
+export async function markSavedWordSynced(id: string, exportedAt: number): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE saved_words
+     SET sync_state = 'synced', sync_error = NULL, exported_at = ?
+     WHERE id = ?;`,
+    exportedAt,
+    id,
+  );
+}
+
+export async function markSavedWordFailed(id: string, error: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE saved_words SET sync_state = 'failed', sync_error = ? WHERE id = ?;`,
+    error,
+    id,
+  );
 }
 
 export async function deleteSavedWord(id: string): Promise<void> {

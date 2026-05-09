@@ -40,8 +40,13 @@ export {
   getSavedWord,
   insertSavedWord,
   listSavedWords,
+  listUnsyncedSavedWords,
+  markSavedWordFailed,
+  markSavedWordSynced,
+  markSavedWordSyncing,
   type NewSavedWord,
   type SavedWord,
+  type SyncState,
 } from "./savedWords";
 export {
   type AnalysisState,
