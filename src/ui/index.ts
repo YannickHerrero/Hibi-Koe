@@ -1,3 +1,7 @@
+// MUST come first: configures Unistyles before any leaf primitive (Button,
+// Display, …) runs its module-level StyleSheet.create((theme) => …).
+import "../theme/unistyles";
+
 export { Button } from "./Button";
 export { Display } from "./Display";
 export { ErrorBoundary } from "./ErrorBoundary";
