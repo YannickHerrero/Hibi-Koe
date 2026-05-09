@@ -81,6 +81,17 @@ const migrations: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_dict_index_form ON dict_index (form, dict_name);
     `,
   },
+  {
+    version: 4,
+    up: `
+      -- Hibi sync state per saved word. NULL ≡ not yet attempted.
+      ALTER TABLE saved_words ADD COLUMN sync_state TEXT;
+      ALTER TABLE saved_words ADD COLUMN sync_error TEXT;
+
+      CREATE INDEX IF NOT EXISTS idx_saved_words_sync_state
+        ON saved_words (sync_state);
+    `,
+  },
 ];
 
 export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
