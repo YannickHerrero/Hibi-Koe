@@ -309,7 +309,10 @@ const styles = StyleSheet.create((theme) => ({
   tokensRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.space.s2,
+    alignItems: "flex-end",
+    // No horizontal gap — tokens should flow as natural Japanese text.
+    // Vertical gap covers wrapping into multiple lines.
+    rowGap: theme.space.s3,
   },
   section: {
     gap: theme.space.s2,
