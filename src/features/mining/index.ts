@@ -2,6 +2,25 @@
 // needs the Unistyles runtime configured before evaluation.
 import "../../theme/unistyles";
 
+export {
+  DICT_DIR,
+  dictsAvailable,
+  getEntries,
+  isLoaded as isDictLoaded,
+  JMDICT_FILE,
+  JMNEDICT_FILE,
+  loadDictionaries,
+  lookup,
+  serializeBundle,
+  unloadDictionaries,
+} from "./dict";
+export {
+  type InstallProgress,
+  type InstallStage,
+  installDictionaries,
+} from "./dictInstaller";
+export { buildMatches } from "./match";
+export { getTokenizer, resetTokenizer, tokenize } from "./tokenize";
 export type {
   AnalysisData,
   AnalyzedCue,
