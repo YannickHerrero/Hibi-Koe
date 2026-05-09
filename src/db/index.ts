@@ -24,6 +24,7 @@ export {
   setPref,
 } from "./prefs";
 export {
+  type AnalysisState,
   deleteTrack,
   getTrack,
   insertTrack,

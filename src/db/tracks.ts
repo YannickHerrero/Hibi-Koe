@@ -1,6 +1,8 @@
 import type { SQLiteBindValue } from "expo-sqlite";
 import { getDb } from "./client";
 
+export type AnalysisState = "pending" | "analyzing" | "completed" | "failed";
+
 export type Track = {
   id: string;
   title: string;
@@ -12,6 +14,9 @@ export type Track = {
   artworkPath: string | null;
   offsetMs: number;
   createdAt: number;
+  analysisState: AnalysisState | null;
+  analysisPath: string | null;
+  analysisError: string | null;
 };
 
 type Row = {
@@ -25,6 +30,9 @@ type Row = {
   artwork_path: string | null;
   offset_ms: number;
   created_at: number;
+  analysis_state: string | null;
+  analysis_path: string | null;
+  analysis_error: string | null;
 };
 
 function fromRow(row: Row): Track {
@@ -39,10 +47,16 @@ function fromRow(row: Row): Track {
     artworkPath: row.artwork_path,
     offsetMs: row.offset_ms,
     createdAt: row.created_at,
+    analysisState: row.analysis_state as AnalysisState | null,
+    analysisPath: row.analysis_path,
+    analysisError: row.analysis_error,
   };
 }
 
-export type NewTrack = Omit<Track, "createdAt" | "offsetMs"> & {
+export type NewTrack = Omit<
+  Track,
+  "createdAt" | "offsetMs" | "analysisState" | "analysisPath" | "analysisError"
+> & {
   offsetMs?: number;
 };
 
@@ -77,12 +91,30 @@ export async function insertTrack(track: NewTrack): Promise<Track> {
     offsetMs,
     createdAt,
   );
-  return { ...track, offsetMs, createdAt };
+  return {
+    ...track,
+    offsetMs,
+    createdAt,
+    analysisState: null,
+    analysisPath: null,
+    analysisError: null,
+  };
 }
 
 export async function updateTrack(
   id: string,
-  patch: Partial<Pick<Track, "title" | "artist" | "source" | "offsetMs">>,
+  patch: Partial<
+    Pick<
+      Track,
+      | "title"
+      | "artist"
+      | "source"
+      | "offsetMs"
+      | "analysisState"
+      | "analysisPath"
+      | "analysisError"
+    >
+  >,
 ): Promise<void> {
   const db = await getDb();
   const fields: string[] = [];
@@ -103,6 +135,18 @@ export async function updateTrack(
   if (patch.offsetMs !== undefined) {
     fields.push("offset_ms = ?");
     values.push(patch.offsetMs);
+  }
+  if (patch.analysisState !== undefined) {
+    fields.push("analysis_state = ?");
+    values.push(patch.analysisState);
+  }
+  if (patch.analysisPath !== undefined) {
+    fields.push("analysis_path = ?");
+    values.push(patch.analysisPath);
+  }
+  if (patch.analysisError !== undefined) {
+    fields.push("analysis_error = ?");
+    values.push(patch.analysisError);
   }
 
   if (fields.length === 0) return;
