@@ -3,9 +3,9 @@ import { router } from "expo-router";
 import * as Sharing from "expo-sharing";
 import { Alert, FlatList, Pressable, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
-import { deleteSavedWord, listSavedWords, type SavedWord } from "../src/db";
-import { useSavedWords } from "../src/features/mining";
-import { Display, Label, Meta, Rule, SafeAreaView, SerifText } from "../src/ui";
+import { deleteSavedWord, listSavedWords, type SavedWord } from "../../src/db";
+import { useSavedWords } from "../../src/features/mining";
+import { Display, Label, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function VocabScreen() {
   const { words, error, refresh } = useSavedWords();
@@ -57,9 +57,7 @@ export default function VocabScreen() {
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <View style={styles.headerRow}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Meta>Close</Meta>
-        </Pressable>
+        <Meta>Vocabulary</Meta>
         <Pressable onPress={onExport} hitSlop={6}>
           <Meta style={styles.exportLabel}>Export JSON</Meta>
         </Pressable>
