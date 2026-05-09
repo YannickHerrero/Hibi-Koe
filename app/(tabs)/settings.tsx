@@ -1,6 +1,11 @@
 import { ScrollView, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
-import { formatBytes, ThemePicker, useStorageUsage } from "../../src/features/settings";
+import {
+  formatBytes,
+  MiningSection,
+  ThemePicker,
+  useStorageUsage,
+} from "../../src/features/settings";
 import { Display, Label, Masthead, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function SettingsScreen() {
@@ -19,7 +24,13 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Label num="№ 02">Storage</Label>
+          <Label num="№ 02">Mining</Label>
+          <Rule variant="soft" style={styles.rule} />
+          <MiningSection />
+        </View>
+
+        <View style={styles.section}>
+          <Label num="№ 03">Storage</Label>
           <Rule variant="soft" style={styles.rule} />
           <View style={styles.kv}>
             <Meta>Tracks</Meta>
@@ -32,7 +43,7 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Label num="№ 03">About</Label>
+          <Label num="№ 04">About</Label>
           <Rule variant="soft" style={styles.rule} />
           <SerifText soft italic>
             Hibi Koe — passive listening immersion. Part of the Hibi ecosystem; the design system is
