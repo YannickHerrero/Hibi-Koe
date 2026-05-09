@@ -2,6 +2,13 @@
 // needs the Unistyles runtime configured before evaluation.
 import "../../theme/unistyles";
 
+export {
+  analysisExistsFor,
+  analysisFileFor,
+  deleteAnalysis,
+  readAnalysis,
+  writeAnalysis,
+} from "./analysisStore";
 export { clearApiKey, getApiKey, hasApiKey, setApiKey } from "./apiKey";
 export {
   DICT_DIR,
