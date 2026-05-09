@@ -1,20 +1,17 @@
 import { createAudioPlayer } from "expo-audio";
+import { formatTitle } from "./title";
 
 export type AudioMetadata = {
   title: string;
   durationMs: number;
 };
 
-function basenameWithoutExt(name: string): string {
-  const cleaned = name.replace(/\\/g, "/").split("/").pop() ?? name;
-  const dot = cleaned.lastIndexOf(".");
-  return dot > 0 ? cleaned.slice(0, dot) : cleaned;
-}
-
 // Probe the audio file for its duration. The title is derived from the
-// filename for now; richer metadata (ID3 cover/artist) can land later.
+// filename via formatTitle (see ./title.ts) — strips release tags,
+// detects S01E02 forms, title-cases the rest. Richer metadata
+// (ID3 cover/artist) can land later.
 export function probeAudioMetadata(uri: string, originalName: string): Promise<AudioMetadata> {
-  const title = basenameWithoutExt(originalName).trim() || "Untitled";
+  const title = formatTitle(originalName);
 
   return new Promise<AudioMetadata>((resolve, reject) => {
     const player = createAudioPlayer(uri, { updateInterval: 100 });
