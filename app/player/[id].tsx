@@ -160,14 +160,14 @@ export default function PlayerScreen() {
 
           <View style={styles.controls}>
             <Scrubber positionMs={positionMs} durationMs={durationMs} isLoaded={isLoaded} />
-            <Transport playing={playing} isLoaded={isLoaded} />
             {track.analysisState === "completed" ? (
               <View style={styles.mineRow}>
-                <Pressable onPress={() => setMiningOpen(true)} style={styles.mineBtn} hitSlop={6}>
+                <Pressable onPress={() => setMiningOpen(true)} hitSlop={8}>
                   <Meta style={styles.mineLabel}>Mine</Meta>
                 </Pressable>
               </View>
             ) : null}
+            <Transport playing={playing} isLoaded={isLoaded} />
           </View>
         </View>
       ) : null}
@@ -226,12 +226,7 @@ const styles = StyleSheet.create((theme) => ({
   mineRow: {
     flexDirection: "row",
     justifyContent: "center",
-  },
-  mineBtn: {
-    paddingHorizontal: theme.space.s5,
-    paddingVertical: theme.space.s2,
-    borderWidth: 1,
-    borderColor: theme.colors.accent,
+    paddingVertical: theme.space.s1,
   },
   mineLabel: {
     color: theme.colors.accent,
