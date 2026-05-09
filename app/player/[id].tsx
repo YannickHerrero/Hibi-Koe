@@ -13,7 +13,12 @@ import {
   useCurrentTrack,
   usePlaybackProgress,
 } from "../../src/features/player";
-import { OffsetControl, SubtitlePane, useSubtitles } from "../../src/features/subtitles";
+import {
+  OffsetControl,
+  SubtitlePane,
+  SubtitleSettingsModal,
+  useSubtitles,
+} from "../../src/features/subtitles";
 import { Display, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function PlayerScreen() {
@@ -46,6 +51,7 @@ export default function PlayerScreen() {
 
   const subtitles = useSubtitles(track?.subtitlePath);
   const [offsetMs, setOffsetMs] = useState(track?.offsetMs ?? 0);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     if (track) setOffsetMs(track.offsetMs);
@@ -70,9 +76,20 @@ export default function PlayerScreen() {
         <Pressable onPress={() => router.back()} hitSlop={12}>
           <Meta>Close</Meta>
         </Pressable>
-        <Meta>Now playing</Meta>
+        {track?.subtitlePath ? (
+          <Pressable onPress={() => setSettingsOpen(true)} hitSlop={12}>
+            <Meta style={styles.settings}>Settings</Meta>
+          </Pressable>
+        ) : null}
       </View>
       <Rule variant="solid" />
+
+      <SubtitleSettingsModal
+        visible={settingsOpen}
+        valueMs={offsetMs}
+        onChange={setOffsetMs}
+        onClose={() => setSettingsOpen(false)}
+      />
 
       {error ? (
         <View style={styles.errorWrap}>
@@ -135,6 +152,9 @@ const styles = StyleSheet.create((theme) => ({
   errorWrap: {
     paddingHorizontal: theme.space.s5,
     paddingVertical: theme.space.s4,
+  },
+  settings: {
+    color: theme.colors.accent,
   },
   body: {
     flex: 1,
