@@ -1,3 +1,7 @@
+// MUST come first: MiniPlayer / Scrubber / Transport / SpeedPicker run
+// StyleSheet.create((theme) => …) at module load.
+import "../../theme/unistyles";
+
 export { useCurrentTrack, usePlayback, usePlaybackProgress } from "./hooks";
 export { MiniPlayer } from "./MiniPlayer";
 export { Scrubber } from "./Scrubber";
