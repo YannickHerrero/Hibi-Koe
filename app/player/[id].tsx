@@ -6,6 +6,7 @@ import { getTrack, type Track, updateTrack } from "../../src/db";
 import { TrackArtwork } from "../../src/features/library";
 import {
   type AnalyzedCue,
+  DictionaryPopup,
   type DictMatch,
   MiningSheet,
   useAnalysis,
@@ -54,15 +55,19 @@ export default function PlayerScreen() {
   const [offsetMs, setOffsetMs] = useState(track?.offsetMs ?? 0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [miningOpen, setMiningOpen] = useState(false);
+  const [dictTarget, setDictTarget] = useState<{
+    cue: AnalyzedCue;
+    tokenIndex: number;
+    matches: DictMatch[];
+  } | null>(null);
   const analysis = useAnalysis(track?.analysisState === "completed" ? track.id : null);
 
   const onPlayLine = (startMs: number, endMs: number) => {
     seekToMs(startMs);
     void endMs;
   };
-  const onTokenSelect = (cue: AnalyzedCue, tokenIndex: number, _matches: DictMatch[]) => {
-    // Dictionary popup is wired in Phase 6.
-    console.log("[mining] token selected", cue.index, tokenIndex);
+  const onTokenSelect = (cue: AnalyzedCue, tokenIndex: number, matches: DictMatch[]) => {
+    setDictTarget({ cue, tokenIndex, matches });
   };
 
   useEffect(() => {
@@ -108,6 +113,15 @@ export default function PlayerScreen() {
         onClose={() => setMiningOpen(false)}
         onPlayLine={onPlayLine}
         onTokenSelect={onTokenSelect}
+      />
+
+      <DictionaryPopup
+        visible={dictTarget !== null}
+        cue={dictTarget?.cue ?? null}
+        tokenIndex={dictTarget?.tokenIndex ?? 0}
+        matches={dictTarget?.matches ?? []}
+        track={track}
+        onClose={() => setDictTarget(null)}
       />
 
       {error ? (
