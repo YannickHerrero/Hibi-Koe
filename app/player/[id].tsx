@@ -5,6 +5,12 @@ import { StyleSheet } from "react-native-unistyles";
 import { getTrack, type Track, updateTrack } from "../../src/db";
 import { TrackArtwork } from "../../src/features/library";
 import {
+  type AnalyzedCue,
+  type DictMatch,
+  MiningSheet,
+  useAnalysis,
+} from "../../src/features/mining";
+import {
   loadTrack,
   PlayerSettingsModal,
   Scrubber,
@@ -47,6 +53,17 @@ export default function PlayerScreen() {
   const subtitles = useSubtitles(track?.subtitlePath);
   const [offsetMs, setOffsetMs] = useState(track?.offsetMs ?? 0);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [miningOpen, setMiningOpen] = useState(false);
+  const analysis = useAnalysis(track?.analysisState === "completed" ? track.id : null);
+
+  const onPlayLine = (startMs: number, endMs: number) => {
+    seekToMs(startMs);
+    void endMs;
+  };
+  const onTokenSelect = (cue: AnalyzedCue, tokenIndex: number, _matches: DictMatch[]) => {
+    // Dictionary popup is wired in Phase 6.
+    console.log("[mining] token selected", cue.index, tokenIndex);
+  };
 
   useEffect(() => {
     if (track) setOffsetMs(track.offsetMs);
@@ -82,6 +99,15 @@ export default function PlayerScreen() {
         offsetMs={track?.subtitlePath ? offsetMs : null}
         onChangeOffset={setOffsetMs}
         onClose={() => setSettingsOpen(false)}
+      />
+
+      <MiningSheet
+        visible={miningOpen}
+        analysis={analysis.analysis}
+        positionMs={positionMs}
+        onClose={() => setMiningOpen(false)}
+        onPlayLine={onPlayLine}
+        onTokenSelect={onTokenSelect}
       />
 
       {error ? (
@@ -121,6 +147,13 @@ export default function PlayerScreen() {
           <View style={styles.controls}>
             <Scrubber positionMs={positionMs} durationMs={durationMs} isLoaded={isLoaded} />
             <Transport playing={playing} isLoaded={isLoaded} />
+            {track.analysisState === "completed" ? (
+              <View style={styles.mineRow}>
+                <Pressable onPress={() => setMiningOpen(true)} style={styles.mineBtn} hitSlop={6}>
+                  <Meta style={styles.mineLabel}>Mine</Meta>
+                </Pressable>
+              </View>
+            ) : null}
           </View>
         </View>
       ) : null}
@@ -175,5 +208,18 @@ const styles = StyleSheet.create((theme) => ({
   controls: {
     gap: theme.space.s4,
     paddingTop: theme.space.s2,
+  },
+  mineRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  mineBtn: {
+    paddingHorizontal: theme.space.s5,
+    paddingVertical: theme.space.s2,
+    borderWidth: 1,
+    borderColor: theme.colors.accent,
+  },
+  mineLabel: {
+    color: theme.colors.accent,
   },
 }));
