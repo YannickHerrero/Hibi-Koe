@@ -12,9 +12,13 @@ export {
   pause,
   play,
   seekToMs,
+  setLoopMode,
+  setRandomMode,
   setRate,
   skipBy,
+  toggleLoopMode,
   togglePlay,
+  toggleRandomMode,
   unload,
 } from "./store";
 export { Transport } from "./Transport";

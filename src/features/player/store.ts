@@ -15,6 +15,11 @@ export type PlaybackState = {
   // floating point churn in components subscribed to the position.
   positionMs: number;
   durationMs: number;
+  // When loopMode is on, expo-audio replays the current track on its own
+  // (player.loop = true). When randomMode is on (and loop is off), the
+  // didJustFinish handler picks another library track and loads it.
+  loopMode: boolean;
+  randomMode: boolean;
 };
 
 const initialState: PlaybackState = {
@@ -22,6 +27,8 @@ const initialState: PlaybackState = {
   status: null,
   positionMs: 0,
   durationMs: 0,
+  loopMode: false,
+  randomMode: false,
 };
 
 let state: PlaybackState = initialState;
@@ -95,7 +102,11 @@ export function loadTrack(track: Track): void {
     console.warn("Failed to bind track to lockscreen", err);
   }
 
+  // Carry over the user's loop/random toggles into the new player.
+  next.loop = state.loopMode;
+
   setState({
+    ...state,
     track,
     status: null,
     positionMs: 0,
@@ -104,19 +115,38 @@ export function loadTrack(track: Track): void {
 
   statusSub = next.addListener("playbackStatusUpdate", (status) => {
     setState({
+      ...state,
       track,
       status,
       positionMs: Math.round(status.currentTime * 1000),
       durationMs: status.duration > 0 ? Math.round(status.duration * 1000) : track.durationMs,
     });
 
-    // When the track ends, snap the position back to 0 and stay paused
-    // so the user can press play again from the top.
-    if (status.didJustFinish) {
+    // expo-audio's player.loop handles repeat natively when loopMode is on.
+    // For didJustFinish (loop off): we'll wire random-next behaviour in a
+    // follow-up commit; for now, snap back to 0 and stay paused.
+    if (status.didJustFinish && !state.loopMode) {
       next.pause();
       next.seekTo(0).catch(() => {});
     }
   });
+}
+
+export function setLoopMode(value: boolean): void {
+  if (player) player.loop = value;
+  setState({ ...state, loopMode: value });
+}
+
+export function setRandomMode(value: boolean): void {
+  setState({ ...state, randomMode: value });
+}
+
+export function toggleLoopMode(): void {
+  setLoopMode(!state.loopMode);
+}
+
+export function toggleRandomMode(): void {
+  setRandomMode(!state.randomMode);
 }
 
 export function play(): void {
