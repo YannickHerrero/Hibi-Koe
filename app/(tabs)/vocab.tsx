@@ -4,7 +4,8 @@ import * as Sharing from "expo-sharing";
 import { Alert, FlatList, Pressable, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { deleteSavedWord, listSavedWords, type SavedWord, type SyncState } from "../../src/db";
-import { useSavedWords } from "../../src/features/mining";
+import { hasHibiApiKey, syncAllPending, useSavedWords } from "../../src/features/mining";
+import { useEffect, useState } from "react";
 import { Display, Label, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 function SyncBadge({ state }: { state: SyncState | null }) {
@@ -18,6 +19,34 @@ function SyncBadge({ state }: { state: SyncState | null }) {
 export default function VocabScreen() {
   const { words, error, refresh } = useSavedWords();
   const isEmpty = words !== null && words.length === 0;
+  const [hibiKeySet, setHibiKeySet] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+
+  useEffect(() => {
+    hasHibiApiKey().then(setHibiKeySet).catch(() => setHibiKeySet(false));
+  }, []);
+
+  const onSync = async () => {
+    setSyncing(true);
+    setSyncStatus("Syncing…");
+    try {
+      const res = await syncAllPending({
+        onProgress: (p) => setSyncStatus(`Syncing ${p.done + 1} / ${p.total}`),
+      });
+      setSyncStatus(
+        res.failed > 0
+          ? `${res.ok} synced, ${res.failed} failed`
+          : `${res.ok} synced`,
+      );
+      refresh();
+    } catch (err) {
+      console.error("[vocab] sync failed", err);
+      setSyncStatus(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const onExport = async () => {
     try {
@@ -66,10 +95,20 @@ export default function VocabScreen() {
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <View style={styles.headerRow}>
         <Meta>Vocabulary</Meta>
-        <Pressable onPress={onExport} hitSlop={6}>
-          <Meta style={styles.exportLabel}>Export JSON</Meta>
-        </Pressable>
+        <View style={styles.headerActions}>
+          {hibiKeySet ? (
+            <Pressable onPress={onSync} hitSlop={6} disabled={syncing}>
+              <Meta style={styles.exportLabel}>{syncing ? "…" : "Sync to Hibi"}</Meta>
+            </Pressable>
+          ) : null}
+          <Pressable onPress={onExport} hitSlop={6}>
+            <Meta style={styles.exportLabel}>Export JSON</Meta>
+          </Pressable>
+        </View>
       </View>
+      {syncStatus ? (
+        <Meta style={styles.syncStatus}>{syncStatus}</Meta>
+      ) : null}
       <Rule variant="solid" />
       <View style={styles.body}>
         <View style={styles.titleBlock}>
@@ -180,5 +219,14 @@ const styles = StyleSheet.create((theme) => ({
   },
   exportLabel: {
     color: theme.colors.accent,
+  },
+  headerActions: {
+    flexDirection: "row",
+    gap: theme.space.s4,
+  },
+  syncStatus: {
+    paddingHorizontal: theme.space.s5,
+    paddingTop: theme.space.s2,
+    color: theme.colors.inkSoft,
   },
 }));
