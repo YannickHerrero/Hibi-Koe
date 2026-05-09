@@ -21,6 +21,12 @@ export {
   installDictionaries,
 } from "./dictInstaller";
 export { buildMatches } from "./match";
+export {
+  authHeaders,
+  OPENROUTER_BASE,
+  type OpenRouterKeyInfo,
+  testOpenRouterApiKey,
+} from "./openrouter";
 export { getTokenizer, resetTokenizer, tokenize } from "./tokenize";
 export type {
   AnalysisData,
