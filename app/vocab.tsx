@@ -1,13 +1,39 @@
+import { File, Paths } from "expo-file-system";
 import { router } from "expo-router";
+import * as Sharing from "expo-sharing";
 import { Alert, FlatList, Pressable, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
-import { deleteSavedWord, type SavedWord } from "../src/db";
+import { deleteSavedWord, listSavedWords, type SavedWord } from "../src/db";
 import { useSavedWords } from "../src/features/mining";
 import { Display, Label, Meta, Rule, SafeAreaView, SerifText } from "../src/ui";
 
 export default function VocabScreen() {
   const { words, error, refresh } = useSavedWords();
   const isEmpty = words !== null && words.length === 0;
+
+  const onExport = async () => {
+    try {
+      const all = await listSavedWords();
+      if (all.length === 0) {
+        Alert.alert("Nothing to export", "Save some entries first.");
+        return;
+      }
+      const file = new File(Paths.cache, `hibi-koe-vocab-${Date.now()}.json`);
+      file.write(JSON.stringify(all, null, 2));
+      const available = await Sharing.isAvailableAsync();
+      if (!available) {
+        Alert.alert("Export ready", `Saved to ${file.uri}`);
+        return;
+      }
+      await Sharing.shareAsync(file.uri, {
+        mimeType: "application/json",
+        dialogTitle: "Export Hibi Koe vocabulary",
+      });
+    } catch (err) {
+      console.error("[vocab] export failed", err);
+      Alert.alert("Export failed", err instanceof Error ? err.message : String(err));
+    }
+  };
 
   const onLongPress = (w: SavedWord) => {
     Alert.alert("Delete entry", `Remove "${w.surface}" from your vocabulary?`, [
@@ -34,7 +60,9 @@ export default function VocabScreen() {
         <Pressable onPress={() => router.back()} hitSlop={12}>
           <Meta>Close</Meta>
         </Pressable>
-        <Meta>Vocabulary</Meta>
+        <Pressable onPress={onExport} hitSlop={6}>
+          <Meta style={styles.exportLabel}>Export JSON</Meta>
+        </Pressable>
       </View>
       <Rule variant="solid" />
       <View style={styles.body}>
@@ -127,5 +155,8 @@ const styles = StyleSheet.create((theme) => ({
   },
   gloss: {
     marginTop: theme.space.s1,
+  },
+  exportLabel: {
+    color: theme.colors.accent,
   },
 }));
