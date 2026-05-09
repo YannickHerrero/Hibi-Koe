@@ -1,13 +1,13 @@
 import { Component, type ReactNode } from "react";
-import { ScrollView, Text } from "react-native";
-import { StyleSheet } from "react-native-unistyles";
+import { ScrollView, StyleSheet, Text } from "react-native";
 
 type Props = { children: ReactNode };
 type State = { error: Error | null };
 
-// Last-ditch error boundary so production crashes surface as on-screen
-// text instead of an instant white screen. Catches render errors only;
-// async errors / native crashes still need adb logcat.
+// Last-ditch error boundary. Uses plain RN StyleSheet (NOT Unistyles)
+// so that it still renders if Unistyles is the thing that crashed.
+// Catches render errors only; async errors and native crashes still
+// need adb logcat.
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { error: null };
 
@@ -32,28 +32,28 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: theme.colors.paper,
-    padding: theme.space.s5,
-    paddingTop: theme.space.s8,
-    gap: theme.space.s3,
+    backgroundColor: "#F4EBD9",
+    paddingHorizontal: 22,
+    paddingTop: 64,
+    paddingBottom: 32,
   },
   title: {
-    fontFamily: theme.fonts.serif,
     fontSize: 24,
-    color: theme.colors.ink,
+    color: "#2B241B",
+    marginBottom: 12,
   },
   body: {
-    fontFamily: theme.fonts.mono,
+    fontFamily: "monospace",
     fontSize: 13,
-    color: theme.colors.ink,
+    color: "#2B241B",
+    marginBottom: 12,
   },
   stack: {
-    fontFamily: theme.fonts.mono,
+    fontFamily: "monospace",
     fontSize: 11,
-    color: theme.colors.inkSoft,
-    marginTop: theme.space.s3,
+    color: "#6B5E4E",
   },
-}));
+});
