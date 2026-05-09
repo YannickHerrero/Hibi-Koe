@@ -10,6 +10,11 @@ export {
   writeAnalysis,
 } from "./analysisStore";
 export { clearApiKey, getApiKey, hasApiKey, setApiKey } from "./apiKey";
+export { clearHibiApiKey, getHibiApiKey, hasHibiApiKey, setHibiApiKey } from "./hibiApiKey";
+export { getHibiClient, resetHibiClient } from "./hibiClient";
+export { segmentFurigana } from "./furigana";
+export { extractKanjiList } from "./kanjiList";
+export { type SyncProgress, syncAllPending, syncSavedWord } from "./sync";
 export { DictionaryPopup } from "./DictionaryPopup";
 export {
   DICT_DIR,
