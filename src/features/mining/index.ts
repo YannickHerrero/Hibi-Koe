@@ -20,6 +20,13 @@ export {
   type InstallStage,
   installDictionaries,
 } from "./dictInstaller";
+export {
+  ANALYSIS_MODEL,
+  type CueTranslation,
+  IncrementalArrayParser,
+  type TranslateOptions,
+  translateCues,
+} from "./llm";
 export { buildMatches } from "./match";
 export {
   authHeaders,
