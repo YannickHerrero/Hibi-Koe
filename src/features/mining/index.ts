@@ -64,3 +64,4 @@ export type {
 } from "./types";
 export { useAnalysis } from "./useAnalysis";
 export { hydrateFurigana, useFurigana } from "./useFurigana";
+export { useSavedWords } from "./useSavedWords";
