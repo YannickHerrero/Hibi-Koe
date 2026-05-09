@@ -1,55 +1,61 @@
-// Shared types for the sentence-mining pipeline.
-//
-// AnalysisData is the per-track JSON blob written to
-// `Paths.document/analysis/<trackId>.json`. AnalyzedCue carries
-// everything the player and the dictionary popup need at runtime
-// (the original cue plus tokens + dictionary matches + LLM output).
+// Shared types for the sentence-mining pipeline. The shapes mirror
+// Pureyaa so we can port their algorithm files (tokenize / dict /
+// match) verbatim — only the surrounding plumbing differs.
 
 export type Token = {
   surface: string;
-  reading: string; // katakana (kuromoji default); converted to hiragana at render
+  reading: string; // katakana (kuromoji default); converted at render
   lemma: string;
-  pos: string; // first-level POS, e.g. "名詞" / "動詞"
+  pos: string;
   charStart: number; // inclusive offset in cue.text
   charEnd: number; // exclusive offset
 };
 
-export type DictSource = "jmdict" | "jmnedict";
+export type DictName = "jmdict" | "jmnedict";
 
 export type DictMatch = {
-  source: DictSource;
-  entryId: number; // index into the dict's entries Map
-  // The token range this match covers (longest-match window).
-  tokenStart: number;
-  tokenEnd: number; // exclusive
-  // The actual surface form that matched (e.g. "走って" or its lemma "走る").
-  matchedSurface: string;
+  // [start, end] inclusive token indices.
+  tokenSpan: [number, number];
+  // The form that hit the index — either the surface joined across the
+  // span, or the lemma of a single-token match.
+  form: string;
+  source: "surface" | "lemma";
+  dict: DictName;
+  entryIds: number[];
 };
 
-export type DictForm = {
-  text: string;
-  isCommon?: boolean;
-};
-
-export type DictReading = {
-  text: string;
-  isCommon?: boolean;
-  appliesToKanji?: string[];
+export type DictSenseExample = {
+  jpn?: string;
+  eng?: string;
 };
 
 export type DictSense = {
-  partOfSpeech: string[];
+  pos: string[];
   glosses: string[];
   fields?: string[];
   misc?: string[];
-  examples?: string[];
+  examples?: DictSenseExample[];
 };
 
 export type DictEntry = {
   id: number;
-  forms: DictForm[];
-  readings: DictReading[];
+  forms: string[];
+  readings: string[];
   senses: DictSense[];
+  frequency?: string;
+  nameType?: string[];
+};
+
+export type DictBundle = {
+  // Maps avoid Hermes' 196,607-property-per-object limit. JMnedict alone
+  // has ~750k entries.
+  index: Map<string, number[]>;
+  entries: Map<number, DictEntry>;
+};
+
+export type SerializedDictBundle = {
+  index: [string, number[]][];
+  entries: [number, DictEntry][];
 };
 
 export type AnalyzedCue = {
@@ -58,8 +64,8 @@ export type AnalyzedCue = {
   endMs: number;
   text: string;
   tokens: Token[];
-  // Map from token-index → matches that begin at that index.
-  // Sorted longest-first within each list.
+  // Map from token-index → matches that begin at that index, sorted
+  // longest-first (jmdict before jmnedict on ties).
   matchesByTokenIndex: Record<number, DictMatch[]>;
   translation: string | null;
   grammarNote: string | null;

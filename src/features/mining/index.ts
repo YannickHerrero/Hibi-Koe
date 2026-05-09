@@ -5,11 +5,12 @@ import "../../theme/unistyles";
 export type {
   AnalysisData,
   AnalyzedCue,
+  DictBundle,
   DictEntry,
-  DictForm,
   DictMatch,
-  DictReading,
+  DictName,
   DictSense,
-  DictSource,
+  DictSenseExample,
+  SerializedDictBundle,
   Token,
 } from "./types";
