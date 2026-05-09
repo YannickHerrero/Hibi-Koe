@@ -72,18 +72,16 @@ export default function PlayerScreen() {
         <Pressable onPress={() => router.back()} hitSlop={12}>
           <Meta>Close</Meta>
         </Pressable>
-        {track?.subtitlePath ? (
-          <Pressable onPress={() => setSettingsOpen(true)} hitSlop={12}>
-            <Meta style={styles.settings}>Settings</Meta>
-          </Pressable>
-        ) : null}
+        <Pressable onPress={() => setSettingsOpen(true)} hitSlop={12}>
+          <Meta style={styles.settings}>Settings</Meta>
+        </Pressable>
       </View>
       <Rule variant="solid" />
 
       <PlayerSettingsModal
         visible={settingsOpen}
-        valueMs={offsetMs}
-        onChange={setOffsetMs}
+        offsetMs={track?.subtitlePath ? offsetMs : null}
+        onChangeOffset={setOffsetMs}
         onClose={() => setSettingsOpen(false)}
       />
 

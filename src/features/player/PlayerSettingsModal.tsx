@@ -5,11 +5,14 @@ import { getOffsetPresets, type OffsetPresets, setOffsetPresets } from "../../db
 import { Display, Label, Meta, Rule } from "../../ui";
 import { OffsetControl } from "../subtitles/OffsetControl";
 import { OffsetPresetSlot } from "../subtitles/OffsetPresetSlot";
+import { SpeedPicker } from "./SpeedPicker";
 
 type Props = {
   visible: boolean;
-  valueMs: number;
-  onChange: (next: number) => void;
+  // null when the current track has no subtitles; the delay sections
+  // are then hidden and only the Speed control is shown.
+  offsetMs: number | null;
+  onChangeOffset: (next: number) => void;
   onClose: () => void;
 };
 
@@ -17,7 +20,9 @@ const SCREEN_HEIGHT = Dimensions.get("window").height;
 const FADE_DURATION = 200;
 const SLIDE_DURATION = 260;
 
-export function PlayerSettingsModal({ visible, valueMs, onChange, onClose }: Props) {
+export function PlayerSettingsModal({ visible, offsetMs, onChangeOffset, onClose }: Props) {
+  const valueMs = offsetMs ?? 0;
+  const hasSubtitles = offsetMs !== null;
   const [presets, setPresets] = useState<OffsetPresets | null>(null);
   // Mount the Modal a bit longer than `visible` so we can play the
   // outgoing animation before unmounting.
@@ -76,9 +81,9 @@ export function PlayerSettingsModal({ visible, valueMs, onChange, onClose }: Pro
 
   const onApply = useCallback(
     (ms: number) => {
-      onChange(ms);
+      onChangeOffset(ms);
     },
-    [onChange],
+    [onChangeOffset],
   );
 
   const onSave = useCallback(
@@ -115,7 +120,7 @@ export function PlayerSettingsModal({ visible, valueMs, onChange, onClose }: Pro
           <Pressable onPress={() => {}}>
             <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
               <View style={styles.headerRow}>
-                <Display size="md">Subtitle delay</Display>
+                <Display size="md">Settings</Display>
                 <Pressable onPress={onClose} hitSlop={12}>
                   <Meta style={styles.close}>Done</Meta>
                 </Pressable>
@@ -123,29 +128,39 @@ export function PlayerSettingsModal({ visible, valueMs, onChange, onClose }: Pro
               <Rule variant="solid" style={styles.rule} />
 
               <View style={styles.section}>
-                <Label num="№ 01">Adjust</Label>
+                <Label num="№ 01">Speed</Label>
                 <Rule variant="soft" style={styles.softRule} />
-                <OffsetControl valueMs={valueMs} onChange={onChange} />
+                <SpeedPicker />
               </View>
 
-              <View style={styles.section}>
-                <Label num="№ 02">Presets</Label>
-                <Rule variant="soft" style={styles.softRule} />
-                <View style={styles.slots}>
-                  {(presets ?? Array.from({ length: 5 }, () => null)).map((slotValue, i) => (
-                    <OffsetPresetSlot
-                      // biome-ignore lint/suspicious/noArrayIndexKey: slot position IS the identity
-                      key={`slot-${i}`}
-                      index={i}
-                      valueMs={slotValue}
-                      onApply={onApply}
-                      onSave={onSave}
-                      onClear={onClear}
-                    />
-                  ))}
-                </View>
-                <Meta style={styles.hint}>Tap to apply · long-press to clear</Meta>
-              </View>
+              {hasSubtitles ? (
+                <>
+                  <View style={styles.section}>
+                    <Label num="№ 02">Subtitle delay</Label>
+                    <Rule variant="soft" style={styles.softRule} />
+                    <OffsetControl valueMs={valueMs} onChange={onChangeOffset} />
+                  </View>
+
+                  <View style={styles.section}>
+                    <Label num="№ 03">Delay presets</Label>
+                    <Rule variant="soft" style={styles.softRule} />
+                    <View style={styles.slots}>
+                      {(presets ?? Array.from({ length: 5 }, () => null)).map((slotValue, i) => (
+                        <OffsetPresetSlot
+                          // biome-ignore lint/suspicious/noArrayIndexKey: slot position IS the identity
+                          key={`slot-${i}`}
+                          index={i}
+                          valueMs={slotValue}
+                          onApply={onApply}
+                          onSave={onSave}
+                          onClear={onClear}
+                        />
+                      ))}
+                    </View>
+                    <Meta style={styles.hint}>Tap to apply · long-press to clear</Meta>
+                  </View>
+                </>
+              ) : null}
             </Animated.View>
           </Pressable>
         </Pressable>
