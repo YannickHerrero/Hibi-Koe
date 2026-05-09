@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, Modal, Pressable, ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
 import { Display, Meta, Rule, SerifText } from "../../ui";
 import { TokenChip } from "./TokenChip";
@@ -48,6 +49,7 @@ export function MiningSheet({
   onTokenSelect,
 }: Props) {
   const { furiganaOn } = useFurigana();
+  const insets = useSafeAreaInsets();
   const [mounted, setMounted] = useState(visible);
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
@@ -137,6 +139,11 @@ export function MiningSheet({
     [cue, onTokenSelect],
   );
 
+  const sheetStyle = [
+    styles.sheet,
+    { transform: [{ translateY }], paddingBottom: insets.bottom + 12 },
+  ];
+
   return (
     <Modal
       visible={mounted}
@@ -144,11 +151,12 @@ export function MiningSheet({
       transparent
       onRequestClose={onClose}
       statusBarTranslucent
+      navigationBarTranslucent
     >
       <Animated.View style={[styles.backdrop, { opacity }]}>
         <Pressable style={styles.backdropTouchable} onPress={onClose}>
-          <Pressable onPress={() => {}}>
-            <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
+          <Pressable style={styles.sheetWrap} onPress={() => {}}>
+            <Animated.View style={sheetStyle}>
               <View style={styles.headerRow}>
                 <Display size="md">Mine</Display>
                 <Pressable onPress={onClose} hitSlop={12}>
@@ -181,37 +189,39 @@ export function MiningSheet({
                   No cue at this position.
                 </SerifText>
               ) : (
-                <ScrollView contentContainerStyle={styles.body}>
-                  <View style={styles.tokensRow}>
-                    {cue.tokens.map((token, i) => (
-                      <TokenChip
-                        // biome-ignore lint/suspicious/noArrayIndexKey: token position IS the identity within a cue
-                        key={`${focusedIndex}-${i}`}
-                        token={token}
-                        index={i}
-                        showFurigana={furiganaOn}
-                        hasMatch={(cue.matchesByTokenIndex[i]?.length ?? 0) > 0}
-                        active={false}
-                        onPress={onTokenPress}
-                      />
-                    ))}
-                  </View>
-
-                  {cue.translation ? (
-                    <View style={styles.section}>
-                      <Meta>English</Meta>
-                      <SerifText size={18}>{cue.translation}</SerifText>
+                <>
+                  <ScrollView contentContainerStyle={styles.body}>
+                    <View style={styles.tokensRow}>
+                      {cue.tokens.map((token, i) => (
+                        <TokenChip
+                          // biome-ignore lint/suspicious/noArrayIndexKey: token position IS the identity within a cue
+                          key={`${focusedIndex}-${i}`}
+                          token={token}
+                          index={i}
+                          showFurigana={furiganaOn}
+                          hasMatch={(cue.matchesByTokenIndex[i]?.length ?? 0) > 0}
+                          active={false}
+                          onPress={onTokenPress}
+                        />
+                      ))}
                     </View>
-                  ) : null}
 
-                  {cue.grammarNote ? (
-                    <View style={styles.section}>
-                      <Meta>Grammar note</Meta>
-                      <SerifText size={15} soft italic>
-                        {cue.grammarNote}
-                      </SerifText>
-                    </View>
-                  ) : null}
+                    {cue.translation ? (
+                      <View style={styles.section}>
+                        <Meta>English</Meta>
+                        <SerifText size={18}>{cue.translation}</SerifText>
+                      </View>
+                    ) : null}
+
+                    {cue.grammarNote ? (
+                      <View style={styles.section}>
+                        <Meta>Grammar note</Meta>
+                        <SerifText size={15} soft italic>
+                          {cue.grammarNote}
+                        </SerifText>
+                      </View>
+                    ) : null}
+                  </ScrollView>
 
                   <View style={styles.actionsRow}>
                     <Pressable
@@ -234,7 +244,7 @@ export function MiningSheet({
                       <Meta style={styles.navLabel}>Next →</Meta>
                     </Pressable>
                   </View>
-                </ScrollView>
+                </>
               )}
             </Animated.View>
           </Pressable>
@@ -253,15 +263,22 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     justifyContent: "flex-end",
   },
+  sheetWrap: {
+    // No styling — exists purely to swallow taps so the backdrop's
+    // close handler doesn't fire when the user interacts with the
+    // sheet itself.
+  },
   sheet: {
     backgroundColor: theme.colors.paper,
     paddingHorizontal: theme.space.s5,
     paddingTop: theme.space.s5,
-    paddingBottom: theme.space.s7,
+    // paddingBottom is set inline using safe-area insets so the sheet
+    // visually flushes with the bottom of the screen on devices with
+    // gesture navigation / on-screen system bars.
     borderTopWidth: 1,
     borderTopColor: theme.colors.ink,
     gap: theme.space.s3,
-    maxHeight: "85%",
+    maxHeight: Math.round(SCREEN_HEIGHT * 0.85),
   },
   headerRow: {
     flexDirection: "row",
