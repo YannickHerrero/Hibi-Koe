@@ -28,6 +28,37 @@ const migrations: Migration[] = [
       );
     `,
   },
+  {
+    version: 2,
+    up: `
+      ALTER TABLE tracks ADD COLUMN analysis_state TEXT;
+      ALTER TABLE tracks ADD COLUMN analysis_path TEXT;
+      ALTER TABLE tracks ADD COLUMN analysis_error TEXT;
+
+      CREATE TABLE IF NOT EXISTS saved_words (
+        id TEXT PRIMARY KEY NOT NULL,
+        track_id TEXT NOT NULL,
+        cue_index INTEGER NOT NULL,
+        surface TEXT NOT NULL,
+        reading TEXT,
+        lemma TEXT,
+        pos TEXT,
+        glosses_json TEXT NOT NULL,
+        sentence_jp TEXT NOT NULL,
+        sentence_en TEXT,
+        grammar_note TEXT,
+        audio_start_ms INTEGER NOT NULL,
+        audio_end_ms INTEGER NOT NULL,
+        audio_clip_path TEXT,
+        artwork_path TEXT,
+        created_at INTEGER NOT NULL,
+        exported_at INTEGER
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_saved_words_track ON saved_words (track_id);
+      CREATE INDEX IF NOT EXISTS idx_saved_words_lemma ON saved_words (lemma);
+    `,
+  },
 ];
 
 export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
