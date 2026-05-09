@@ -3,9 +3,17 @@ import { router } from "expo-router";
 import * as Sharing from "expo-sharing";
 import { Alert, FlatList, Pressable, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
-import { deleteSavedWord, listSavedWords, type SavedWord } from "../../src/db";
+import { deleteSavedWord, listSavedWords, type SavedWord, type SyncState } from "../../src/db";
 import { useSavedWords } from "../../src/features/mining";
 import { Display, Label, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
+
+function SyncBadge({ state }: { state: SyncState | null }) {
+  if (!state) return null;
+  if (state === "synced") return <Meta style={styles.badgeSynced}>↑ synced</Meta>;
+  if (state === "syncing") return <Meta style={styles.badgePending}>syncing…</Meta>;
+  if (state === "failed") return <Meta style={styles.badgeFailed}>failed</Meta>;
+  return <Meta style={styles.badgePending}>pending</Meta>;
+}
 
 export default function VocabScreen() {
   const { words, error, refresh } = useSavedWords();
@@ -100,6 +108,7 @@ export default function VocabScreen() {
                     {item.glosses.slice(0, 3).join("; ")}
                   </SerifText>
                 </View>
+                <SyncBadge state={item.syncState} />
               </Pressable>
             )}
             contentContainerStyle={styles.list}
@@ -144,9 +153,24 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space.s3,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.ruleSoft,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: theme.space.s3,
   },
   rowText: {
+    flex: 1,
     gap: 2,
+  },
+  badgeSynced: {
+    color: theme.colors.accent,
+  },
+  badgePending: {
+    color: theme.colors.inkFaint,
+  },
+  badgeFailed: {
+    color: theme.colors.inkSoft,
+    fontStyle: "italic",
   },
   reading: {
     color: theme.colors.inkSoft,
