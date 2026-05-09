@@ -8,7 +8,6 @@ import {
   loadTrack,
   PlayerSettingsModal,
   Scrubber,
-  SpeedPicker,
   seekToMs,
   Transport,
   useCurrentTrack,
@@ -122,7 +121,6 @@ export default function PlayerScreen() {
           <View style={styles.controls}>
             <Scrubber positionMs={positionMs} durationMs={durationMs} isLoaded={isLoaded} />
             <Transport playing={playing} isLoaded={isLoaded} />
-            <SpeedPicker />
           </View>
         </View>
       ) : null}
