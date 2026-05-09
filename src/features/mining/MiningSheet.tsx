@@ -7,6 +7,7 @@ import { getMatchesCoveringToken } from "./match";
 import { TokenChip } from "./TokenChip";
 import type { AnalysisData, AnalyzedCue, DictMatch } from "./types";
 import { useFurigana } from "./useFurigana";
+import { useMatchUnderline } from "./useMatchUnderline";
 
 type Props = {
   visible: boolean;
@@ -50,6 +51,7 @@ export function MiningSheet({
   onTokenSelect,
 }: Props) {
   const { furiganaOn } = useFurigana();
+  const { matchUnderlineOn } = useMatchUnderline();
   const insets = useSafeAreaInsets();
   const [mounted, setMounted] = useState(visible);
   const opacity = useRef(new Animated.Value(0)).current;
@@ -207,7 +209,7 @@ export function MiningSheet({
                           token={token}
                           index={i}
                           showFurigana={furiganaOn}
-                          hasMatch={(coveringByIndex[i]?.length ?? 0) > 0}
+                          hasMatch={matchUnderlineOn && (coveringByIndex[i]?.length ?? 0) > 0}
                           active={false}
                           onPress={onTokenPress}
                         />
