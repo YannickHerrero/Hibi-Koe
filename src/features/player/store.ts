@@ -1,5 +1,5 @@
 import { type AudioPlayer, type AudioStatus, createAudioPlayer } from "expo-audio";
-import type { Track } from "../../db";
+import { listTracks, type Track } from "../../db";
 import { getPref, setPref } from "../../db/prefs";
 
 // Module-level singleton player. Audio is one-at-a-time in v1: loading
@@ -124,13 +124,29 @@ export function loadTrack(track: Track): void {
     });
 
     // expo-audio's player.loop handles repeat natively when loopMode is on.
-    // For didJustFinish (loop off): we'll wire random-next behaviour in a
-    // follow-up commit; for now, snap back to 0 and stay paused.
+    // When loop is off and randomMode is on, pick another track from the
+    // library and load it. Otherwise snap to 0 and stay paused so the
+    // user can replay manually.
     if (status.didJustFinish && !state.loopMode) {
-      next.pause();
-      next.seekTo(0).catch(() => {});
+      if (state.randomMode) {
+        playRandomNext(track.id).catch((err) =>
+          console.warn("[player] randomMode pickNext failed", err),
+        );
+      } else {
+        next.pause();
+        next.seekTo(0).catch(() => {});
+      }
     }
   });
+}
+
+async function playRandomNext(currentId: string): Promise<void> {
+  const tracks = await listTracks();
+  const others = tracks.filter((t) => t.id !== currentId);
+  if (others.length === 0) return;
+  const next = others[Math.floor(Math.random() * others.length)];
+  loadTrack(next);
+  player?.play();
 }
 
 export function setLoopMode(value: boolean): void {
