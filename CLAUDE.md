@@ -19,6 +19,12 @@ Mobile passive-listening immersion app for the Hibi ecosystem. Audio + subtitle 
   channels declared in `eas.json` (development / preview / production).
   `updates.url` and `extra.eas.projectId` are filled by
   `eas update:configure`, not committed by hand.
+- Mining stack: kuromoji-react-native (Hermes-patched: pako gunzip
+  + target_map Proxy in `src/features/mining/tokenize.ts`),
+  jmdict-simplified release loaded into Map-backed bundles under
+  `Paths.document/dict/`, OpenRouter (anthropic/claude-sonnet-4.5)
+  for context-aware translation via XHR-streamed JSON arrays,
+  expo-secure-store for the API key.
 
 ## Design system
 
@@ -46,7 +52,11 @@ src/
     player/               singleton store, hooks, Transport, Scrubber, SpeedPicker, MiniPlayer
     subtitles/            SRT parser, cue index, pane, offset control, loader hook
     import/               document pickers, sandbox copy, metadata probe, saveTrack
-    settings/             theme picker, storage usage
+    settings/             theme picker, mining section, storage usage
+    mining/               kuromoji bootstrap, dict + dict-installer,
+                          longest-match, OpenRouter client + LLM,
+                          orchestrator, MiningSheet, DictionaryPopup,
+                          TokenChip, saved-word + analysis hooks
     updates/              UpdatePrompt — OTA notification via useUpdates
   theme/                  colors, tokens, fonts, themes, unistyles, useThemeSwitcher
   ui/                     primitives — Rule, Label, Meta, Display, SerifText,
@@ -68,6 +78,9 @@ src/
 
 Short imperative subject, conventional commit prefix (chore/feat/fix/docs/refactor/test). Bullet body for the *why*; the diff explains the what. Many small, atomic commits — one logical change each.
 
-## Out of scope for v1
+## Out of scope (still)
 
-A-B loop, sleep timer, batch import, share-intent, multi-track subtitles, mining (popup dictionary, save-card), Hibi API integration, EAS production builds. Add later; do not pre-plumb.
+A-B loop, sleep timer, batch import, share-intent, multi-track subtitles,
+AnkiDroid native bridge, audio-clip extraction (cards still reference the
+source track via trackId + startMs / endMs), Hibi API sync, EAS production
+builds. Add later; do not pre-plumb.
