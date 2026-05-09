@@ -21,6 +21,12 @@ expo-env.d.ts
 ios/
 android/
 
+# Local Expo modules ship native sources; un-ignore them.
+!modules/*/ios/
+!modules/*/ios/**
+!modules/*/android/
+!modules/*/android/**
+
 # Metro
 .metro-health-check*
 
