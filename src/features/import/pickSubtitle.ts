@@ -11,9 +11,10 @@ export type PickedSubtitle = {
 const SUBTITLE_MIME = ["text/*", "application/x-subrip", "*/*"];
 
 export async function pickSubtitle(): Promise<PickedSubtitle | null> {
+  // See pickAudio for why copyToCacheDirectory must be true on Android.
   const result = await DocumentPicker.getDocumentAsync({
     type: SUBTITLE_MIME,
-    copyToCacheDirectory: false,
+    copyToCacheDirectory: true,
     multiple: false,
   });
   if (result.canceled) return null;
