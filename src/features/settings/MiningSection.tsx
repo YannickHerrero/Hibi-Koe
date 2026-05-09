@@ -1,9 +1,21 @@
 import { Pressable, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Meta, Rule, SerifText } from "../../ui";
-import { useFurigana, useMatchUnderline } from "../mining";
+import {
+  clearHibiApiKey,
+  getHibiApiKey,
+  setHibiApiKey,
+  useFurigana,
+  useMatchUnderline,
+} from "../mining";
 import { ApiKeyField } from "./ApiKeyField";
 import { DictSetupCard } from "./DictSetupCard";
+
+const hibiAccessor = {
+  get: getHibiApiKey,
+  set: setHibiApiKey,
+  clear: clearHibiApiKey,
+};
 
 // Composes the three mining-related controls into a single section
 // rendered inside the Settings screen. Each row is its own little
@@ -20,6 +32,16 @@ export function MiningSection() {
         <ApiKeyField />
         <SerifText soft italic style={styles.hint}>
           Used for context-aware translations during track import.
+        </SerifText>
+      </View>
+
+      <View style={styles.row}>
+        <Meta>Hibi API key</Meta>
+        <Rule variant="soft" style={styles.rule} />
+        <ApiKeyField accessor={hibiAccessor} placeholder="hibi_…" />
+        <SerifText soft italic style={styles.hint}>
+          Mined words sync to your Hibi library when set. Generate a key at hibi.app → API
+          keys.
         </SerifText>
       </View>
 

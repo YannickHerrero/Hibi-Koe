@@ -4,12 +4,33 @@ import { StyleSheet } from "react-native-unistyles";
 import { Field, Meta, SerifText } from "../../ui";
 import { clearApiKey, getApiKey, setApiKey } from "../mining";
 
-// Masked input for the OpenRouter API key. Stored in expo-secure-store,
-// not in the prefs SQLite table — see src/features/mining/apiKey.ts.
+// Masked input for any secure-store-backed API key. Defaults to the
+// OpenRouter key for backwards compatibility; pass `accessor` props to
+// reuse the component for the Hibi key.
 
 type Status = "idle" | "loaded" | "saving" | "saved" | "error";
 
-export function ApiKeyField() {
+export type ApiKeyAccessor = {
+  get: () => Promise<string | null>;
+  set: (value: string) => Promise<void>;
+  clear: () => Promise<void>;
+};
+
+export type ApiKeyFieldProps = {
+  accessor?: ApiKeyAccessor;
+  placeholder?: string;
+};
+
+const defaultAccessor: ApiKeyAccessor = {
+  get: getApiKey,
+  set: setApiKey,
+  clear: clearApiKey,
+};
+
+export function ApiKeyField({
+  accessor = defaultAccessor,
+  placeholder = "sk-or-v1-…",
+}: ApiKeyFieldProps = {}) {
   const [value, setValue] = useState("");
   const [reveal, setReveal] = useState(false);
   const [hasStored, setHasStored] = useState(false);
@@ -17,7 +38,8 @@ export function ApiKeyField() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getApiKey()
+    accessor
+      .get()
       .then((stored) => {
         if (stored) {
           setValue(stored);
@@ -26,21 +48,21 @@ export function ApiKeyField() {
         setStatus("loaded");
       })
       .catch((err) => {
-        console.error("[mining] ApiKeyField getApiKey failed", err);
+        console.error("[mining] ApiKeyField get failed", err);
         setError(err instanceof Error ? err.message : String(err));
         setStatus("error");
       });
-  }, []);
+  }, [accessor]);
 
   const onSave = async () => {
     setStatus("saving");
     setError(null);
     try {
-      await setApiKey(value);
+      await accessor.set(value);
       setHasStored(value.trim().length > 0);
       setStatus("saved");
     } catch (err) {
-      console.error("[mining] ApiKeyField setApiKey failed", err);
+      console.error("[mining] ApiKeyField set failed", err);
       setError(err instanceof Error ? err.message : String(err));
       setStatus("error");
     }
@@ -49,12 +71,12 @@ export function ApiKeyField() {
   const onClear = async () => {
     setStatus("saving");
     try {
-      await clearApiKey();
+      await accessor.clear();
       setValue("");
       setHasStored(false);
       setStatus("saved");
     } catch (err) {
-      console.error("[mining] ApiKeyField clearApiKey failed", err);
+      console.error("[mining] ApiKeyField clear failed", err);
       setError(err instanceof Error ? err.message : String(err));
       setStatus("error");
     }
@@ -68,7 +90,7 @@ export function ApiKeyField() {
           setValue(v);
           if (status === "saved") setStatus("loaded");
         }}
-        placeholder="sk-or-v1-…"
+        placeholder={placeholder}
         autoCapitalize="none"
         autoCorrect={false}
         secureTextEntry={!reveal}
