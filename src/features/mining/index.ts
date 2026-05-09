@@ -10,6 +10,7 @@ export {
   writeAnalysis,
 } from "./analysisStore";
 export { clearApiKey, getApiKey, hasApiKey, setApiKey } from "./apiKey";
+export { DictionaryPopup } from "./DictionaryPopup";
 export {
   DICT_DIR,
   dictsAvailable,
