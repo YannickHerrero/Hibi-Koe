@@ -9,12 +9,41 @@ import {
   pickSubtitle,
   saveTrack,
 } from "../src/features/import";
+import {
+  type AnalysisProgress,
+  analyzeTrack,
+  dictsAvailable,
+  hasApiKey,
+} from "../src/features/mining";
 import { Button, Display, Label, Meta, Rule, SafeAreaView, SerifText } from "../src/ui";
+
+type Phase = "idle" | "saving" | "analyzing";
+
+function formatPhase(p: AnalysisProgress | null): string {
+  if (!p) return "Preparing analysis…";
+  switch (p.phase) {
+    case "starting":
+      return "Starting analysis…";
+    case "loading-dictionaries":
+      return "Loading JMdict + JMnedict…";
+    case "warming-tokenizer":
+      return "Warming up the tokenizer…";
+    case "tokenizing":
+      return `Tokenizing ${p.processed} / ${p.total} cues…`;
+    case "translating":
+      return `Translating ${p.translated} / ${p.total} cues…`;
+    case "saving":
+      return "Saving analysis…";
+    case "done":
+      return "Done.";
+  }
+}
 
 export default function ImportScreen() {
   const [audio, setAudio] = useState<PickedAudio | null>(null);
   const [subtitle, setSubtitle] = useState<PickedSubtitle | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [progress, setProgress] = useState<AnalysisProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const onPickAudio = async () => {
@@ -42,21 +71,33 @@ export default function ImportScreen() {
   const onSave = async () => {
     if (!audio) return;
     setError(null);
-    setSaving(true);
+    setPhase("saving");
     try {
-      await saveTrack({ audio, subtitle });
+      const track = await saveTrack({ audio, subtitle });
+
+      if (track.subtitlePath && (await hasApiKey()) && dictsAvailable()) {
+        setPhase("analyzing");
+        await analyzeTrack({
+          trackId: track.id,
+          subtitlePath: track.subtitlePath,
+          onProgress: setProgress,
+        });
+      }
+
       router.replace("/");
     } catch (err) {
       console.error("[import] saveTrack failed", err);
       setError(err instanceof Error ? err.message : String(err));
-      setSaving(false);
+      setPhase("idle");
     }
   };
+
+  const busy = phase !== "idle";
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <View style={styles.headerRow}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={() => router.back()} hitSlop={12} disabled={busy}>
           <Meta>Cancel</Meta>
         </Pressable>
         <Meta>New track</Meta>
@@ -76,7 +117,9 @@ export default function ImportScreen() {
             </SerifText>
           )}
           <View style={styles.action}>
-            <Button onPress={onPickAudio}>{audio ? "Replace audio" : "Pick audio"}</Button>
+            <Button onPress={onPickAudio} disabled={busy}>
+              {audio ? "Replace audio" : "Pick audio"}
+            </Button>
           </View>
         </View>
 
@@ -91,11 +134,24 @@ export default function ImportScreen() {
             </SerifText>
           )}
           <View style={styles.action}>
-            <Button onPress={onPickSubtitle}>
+            <Button onPress={onPickSubtitle} disabled={busy}>
               {subtitle ? "Replace subtitle" : "Pick subtitle"}
             </Button>
           </View>
         </View>
+
+        {phase === "analyzing" ? (
+          <View style={styles.section}>
+            <Label num="№ 03">Analysis</Label>
+            <Rule variant="soft" style={styles.rule} />
+            <SerifText>{formatPhase(progress)}</SerifText>
+            {progress?.phase === "translating" && progress.latestText ? (
+              <SerifText soft italic style={styles.latestLine}>
+                {progress.latestText}
+              </SerifText>
+            ) : null}
+          </View>
+        ) : null}
 
         {error ? (
           <View style={styles.error}>
@@ -105,10 +161,14 @@ export default function ImportScreen() {
         ) : null}
 
         <View style={styles.save}>
-          <Button variant="primary" onPress={onSave} disabled={!audio || saving}>
-            {saving ? "Saving…" : "Save to library"}
+          <Button variant="primary" onPress={onSave} disabled={!audio || busy}>
+            {phase === "saving"
+              ? "Saving…"
+              : phase === "analyzing"
+                ? "Analyzing…"
+                : "Save to library"}
           </Button>
-          {saving ? <ActivityIndicator style={styles.spinner} /> : null}
+          {busy ? <ActivityIndicator style={styles.spinner} /> : null}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -157,5 +217,8 @@ const styles = StyleSheet.create((theme) => ({
   },
   errorLabel: {
     color: theme.colors.accent,
+  },
+  latestLine: {
+    marginTop: theme.space.s2,
   },
 }));
