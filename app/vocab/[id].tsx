@@ -33,7 +33,7 @@ export default function VocabDetailScreen() {
 
   const onPlayLine = () => {
     if (!word || !track) return;
-    playTrackAt(track, word.audioStartMs);
+    playTrackAt(track, word.audioStartMs, word.audioEndMs);
   };
 
   return (

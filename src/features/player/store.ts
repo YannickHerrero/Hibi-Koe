@@ -41,6 +41,10 @@ let statusSub: { remove: () => void } | null = null;
 // audio source's load.
 let pendingSeekMs: number | null = null;
 let pendingPlayAfterSeek = false;
+// When set, the status listener pauses playback once the position
+// reaches this point. Cleared on any user-initiated seek/play so we
+// don't fire mid-track on later transport interactions.
+let stopAtMs: number | null = null;
 
 const listeners = new Set<() => void>();
 
@@ -129,6 +133,16 @@ export function loadTrack(track: Track): void {
       durationMs: status.duration > 0 ? Math.round(status.duration * 1000) : track.durationMs,
     });
 
+    if (
+      stopAtMs !== null &&
+      status.isLoaded &&
+      status.playing &&
+      status.currentTime * 1000 >= stopAtMs
+    ) {
+      stopAtMs = null;
+      next.pause();
+    }
+
     if (pendingSeekMs !== null && status.isLoaded) {
       const target = pendingSeekMs;
       const shouldPlay = pendingPlayAfterSeek;
@@ -207,15 +221,18 @@ export async function hydratePlaybackPrefs(): Promise<void> {
 }
 
 export function play(): void {
+  stopAtMs = null;
   player?.play();
 }
 
 export function pause(): void {
+  stopAtMs = null;
   player?.pause();
 }
 
 export function togglePlay(): void {
   if (!player) return;
+  stopAtMs = null;
   if (player.playing) {
     player.pause();
   } else {
@@ -226,7 +243,8 @@ export function togglePlay(): void {
 // Loads the track if not already current, then seeks to `ms` and plays.
 // Safe to call against a freshly-created player — the seek/play are
 // deferred until the audio source reports isLoaded.
-export function playTrackAt(track: Track, ms: number): void {
+export function playTrackAt(track: Track, ms: number, endMs?: number): void {
+  stopAtMs = endMs !== undefined && endMs > ms ? endMs : null;
   const alreadyLoaded = state.track?.id === track.id && player !== null;
   if (!alreadyLoaded) {
     pendingSeekMs = ms;
@@ -243,6 +261,7 @@ export function playTrackAt(track: Track, ms: number): void {
 
 export function seekToMs(ms: number): void {
   if (!player) return;
+  stopAtMs = null;
   player.seekTo(Math.max(0, ms / 1000)).catch(() => {});
 }
 
