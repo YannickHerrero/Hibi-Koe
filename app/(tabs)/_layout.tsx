@@ -16,7 +16,7 @@ export default function TabsLayout() {
           tabBarLabelStyle: styles.label,
         }}
       >
-        <Tabs.Screen name="library" options={{ title: "Library" }} />
+        <Tabs.Screen name="index" options={{ title: "Library" }} />
         <Tabs.Screen name="settings" options={{ title: "Settings" }} />
       </Tabs>
       <MiniPlayer />
