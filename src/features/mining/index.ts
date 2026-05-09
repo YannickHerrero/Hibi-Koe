@@ -41,6 +41,11 @@ export {
   type OpenRouterKeyInfo,
   testOpenRouterApiKey,
 } from "./openrouter";
+export {
+  type AnalysisProgress,
+  type AnalyzeOptions,
+  analyzeTrack,
+} from "./orchestrator";
 export { getTokenizer, resetTokenizer, tokenize } from "./tokenize";
 export type {
   AnalysisData,
