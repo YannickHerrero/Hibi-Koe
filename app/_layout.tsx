@@ -6,6 +6,7 @@ import { StyleSheet as RNStyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { configureAudioSession } from "../src/audio/session";
 import { initDb } from "../src/db";
+import { hydratePlaybackPrefs } from "../src/features/player";
 import { UpdatePrompt } from "../src/features/updates";
 import { useAppFonts } from "../src/theme/fonts";
 import { hydrateTheme } from "../src/theme/useThemeSwitcher";
@@ -32,7 +33,7 @@ function RootLayoutInner() {
     // default paper theme on cold start.
     (async () => {
       await initDb();
-      await hydrateTheme();
+      await Promise.all([hydrateTheme(), hydratePlaybackPrefs()]);
       setDbReady(true);
     })().catch((err) => {
       console.error("Failed to initialize db", err);

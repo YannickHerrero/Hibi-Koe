@@ -7,6 +7,7 @@ export { MiniPlayer } from "./MiniPlayer";
 export { Scrubber } from "./Scrubber";
 export { SpeedPicker } from "./SpeedPicker";
 export {
+  hydratePlaybackPrefs,
   loadTrack,
   type PlaybackState,
   pause,

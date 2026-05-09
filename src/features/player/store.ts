@@ -1,5 +1,6 @@
 import { type AudioPlayer, type AudioStatus, createAudioPlayer } from "expo-audio";
 import type { Track } from "../../db";
+import { getPref, setPref } from "../../db/prefs";
 
 // Module-level singleton player. Audio is one-at-a-time in v1: loading
 // a new track replaces the previous player so the mini-player on the
@@ -135,10 +136,16 @@ export function loadTrack(track: Track): void {
 export function setLoopMode(value: boolean): void {
   if (player) player.loop = value;
   setState({ ...state, loopMode: value });
+  setPref("loopMode", value ? "1" : "0").catch((err) =>
+    console.warn("[player] persist loopMode failed", err),
+  );
 }
 
 export function setRandomMode(value: boolean): void {
   setState({ ...state, randomMode: value });
+  setPref("randomMode", value ? "1" : "0").catch((err) =>
+    console.warn("[player] persist randomMode failed", err),
+  );
 }
 
 export function toggleLoopMode(): void {
@@ -147,6 +154,21 @@ export function toggleLoopMode(): void {
 
 export function toggleRandomMode(): void {
   setRandomMode(!state.randomMode);
+}
+
+let prefsHydrated = false;
+
+// Public: lets the boot sequence apply saved loop/random preferences
+// before any UI renders. Idempotent.
+export async function hydratePlaybackPrefs(): Promise<void> {
+  if (prefsHydrated) return;
+  prefsHydrated = true;
+  const [loop, random] = await Promise.all([getPref("loopMode"), getPref("randomMode")]);
+  setState({
+    ...state,
+    loopMode: loop === "1",
+    randomMode: random === "1",
+  });
 }
 
 export function play(): void {

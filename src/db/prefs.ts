@@ -1,7 +1,12 @@
 import { getDb } from "./client";
 
 // Keys are namespaced with a dot to keep the table grep-able.
-export type PrefKey = "theme" | "lastPlayedTrackId" | "subtitleOffsetPresets";
+export type PrefKey =
+  | "theme"
+  | "lastPlayedTrackId"
+  | "subtitleOffsetPresets"
+  | "loopMode"
+  | "randomMode";
 
 export async function getPref(key: PrefKey): Promise<string | null> {
   const db = await getDb();
