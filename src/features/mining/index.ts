@@ -34,3 +34,4 @@ export type {
   SerializedDictBundle,
   Token,
 } from "./types";
+export { hydrateFurigana, useFurigana } from "./useFurigana";

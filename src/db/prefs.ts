@@ -6,7 +6,8 @@ export type PrefKey =
   | "lastPlayedTrackId"
   | "subtitleOffsetPresets"
   | "loopMode"
-  | "randomMode";
+  | "randomMode"
+  | "furiganaOn";
 
 export async function getPref(key: PrefKey): Promise<string | null> {
   const db = await getDb();
