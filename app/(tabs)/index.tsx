@@ -1,12 +1,18 @@
 import { router } from "expo-router";
 import { FlatList, Pressable, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
-import { openTrackContextMenu, TrackRow, useTracks } from "../../src/features/library";
+import {
+  TrackContextSheet,
+  TrackRow,
+  useTrackContextSheet,
+  useTracks,
+} from "../../src/features/library";
 import { Display, Label, Masthead, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function LibraryScreen() {
   const { tracks, error, refresh } = useTracks();
   const isEmpty = tracks !== null && tracks.length === 0;
+  const sheet = useTrackContextSheet();
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
@@ -41,18 +47,22 @@ export default function LibraryScreen() {
               <TrackRow
                 track={item}
                 onPress={(t) => router.push(`/player/${t.id}`)}
-                onLongPress={(t) =>
-                  openTrackContextMenu(t, {
-                    onEdit: (target) => router.push(`/track/${target.id}/edit`),
-                    onDeleted: refresh,
-                  })
-                }
+                onLongPress={(t) => sheet.open(t)}
               />
             )}
             contentContainerStyle={styles.list}
           />
         )}
       </View>
+      <TrackContextSheet
+        track={sheet.track}
+        visible={sheet.visible}
+        onClose={sheet.close}
+        actions={{
+          onEdit: (target) => router.push(`/track/${target.id}/edit`),
+          onDeleted: refresh,
+        }}
+      />
     </SafeAreaView>
   );
 }
