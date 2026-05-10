@@ -10,6 +10,7 @@ export { SpeedPicker } from "./SpeedPicker";
 export {
   hydratePlaybackPrefs,
   loadTrack,
+  type PlaybackContext,
   type PlaybackState,
   pause,
   play,

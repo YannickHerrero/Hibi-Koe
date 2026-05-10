@@ -9,6 +9,13 @@ import { getPref, setPref } from "../../db/prefs";
 // State updates flow through `subscribe` so any consumer
 // (useSyncExternalStore-based) re-renders.
 
+// What list the player should walk for auto-advance / random pickNext.
+// Set whenever loadTrack is called; defaults to "library" when callers
+// don't specify a context.
+export type PlaybackContext =
+  | { kind: "library" }
+  | { kind: "playlist"; playlistId: string };
+
 export type PlaybackState = {
   track: Track | null;
   status: AudioStatus | null;
@@ -21,7 +28,12 @@ export type PlaybackState = {
   // didJustFinish handler picks another library track and loads it.
   loopMode: boolean;
   randomMode: boolean;
+  // Where the current track was launched from. End-of-track auto-advance
+  // walks this list.
+  context: PlaybackContext;
 };
+
+const LIBRARY_CONTEXT: PlaybackContext = { kind: "library" };
 
 const initialState: PlaybackState = {
   track: null,
@@ -30,6 +42,7 @@ const initialState: PlaybackState = {
   durationMs: 0,
   loopMode: false,
   randomMode: false,
+  context: LIBRARY_CONTEXT,
 };
 
 let state: PlaybackState = initialState;
@@ -62,6 +75,12 @@ function setState(next: PlaybackState): void {
   for (const listener of listeners) listener();
 }
 
+function sameContext(a: PlaybackContext, b: PlaybackContext): boolean {
+  if (a.kind !== b.kind) return false;
+  if (a.kind === "playlist" && b.kind === "playlist") return a.playlistId === b.playlistId;
+  return true;
+}
+
 function detach(): void {
   if (statusSub) {
     statusSub.remove();
@@ -82,8 +101,13 @@ function detach(): void {
   }
 }
 
-export function loadTrack(track: Track): void {
+export function loadTrack(track: Track, context: PlaybackContext = LIBRARY_CONTEXT): void {
   if (state.track?.id === track.id && player) {
+    // Same track — just refresh the context if it changed (e.g. user
+    // tapped the same row inside a playlist after starting in Library).
+    if (!sameContext(state.context, context)) {
+      setState({ ...state, context });
+    }
     return;
   }
 
@@ -122,6 +146,7 @@ export function loadTrack(track: Track): void {
     status: null,
     positionMs: 0,
     durationMs: track.durationMs,
+    context,
   });
 
   statusSub = next.addListener("playbackStatusUpdate", (status) => {
