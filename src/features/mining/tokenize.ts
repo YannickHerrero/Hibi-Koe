@@ -11,24 +11,27 @@
 // so that the prototype mutations are visible to its internal builders.
 
 import { Asset } from "expo-asset";
+import { File } from "expo-file-system";
 import pako from "pako";
 import type { Token } from "./types";
 
+// Patch the dict loader to read bytes via expo-file-system instead of
+// RN's fetch. fetch() on a file:// URL goes through the Blob bridge,
+// which on Android intermittently rejects with "The specified blob
+// is invalid" when the underlying blob handle is GC'd before resolve.
+// File.bytesSync() reads directly through the FileSystem module.
 const RNDictionaryLoader = require("kuromoji-react-native/src/loader/ReactNativeDictionaryLoader");
 RNDictionaryLoader.prototype.loadArrayBuffer = (
   url: string,
   callback: (err: Error | null, buffer: ArrayBuffer | null) => void,
 ) => {
-  fetch(url)
-    .then((r) => {
-      if (!r.ok) throw new Error(`HTTP ${r.status} loading ${url}`);
-      return r.arrayBuffer();
-    })
-    .then((buf) => {
-      const inflated = pako.ungzip(new Uint8Array(buf));
-      callback(null, inflated.buffer as ArrayBuffer);
-    })
-    .catch((err) => callback(err, null));
+  try {
+    const bytes = new File(url).bytesSync();
+    const inflated = pako.ungzip(bytes);
+    callback(null, inflated.buffer as ArrayBuffer);
+  } catch (err) {
+    callback(err instanceof Error ? err : new Error(String(err)), null);
+  }
 };
 
 const TokenInfoDictionary = require("kuromoji-react-native/src/dict/TokenInfoDictionary");
