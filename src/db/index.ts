@@ -34,6 +34,19 @@ export {
   setPref,
 } from "./prefs";
 export {
+  countUnsyncedListeningSessions,
+  getListeningSession,
+  insertListeningSession,
+  type ListeningSession,
+  listUnsyncedListeningSessions,
+  markListeningSessionFailed,
+  markListeningSessionSynced,
+  markListeningSessionSyncing,
+  type NewListeningSession,
+  type SessionSyncState,
+  totalListeningMsBetween,
+} from "./listeningSessions";
+export {
   addTrackToPlaylist,
   createPlaylist,
   deletePlaylist,
