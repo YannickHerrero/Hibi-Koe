@@ -1,3 +1,4 @@
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
@@ -71,6 +72,12 @@ export default function SettingsScreen() {
             Hibi Koe — passive listening immersion. Part of the Hibi ecosystem; the design system is
             Torakaa.
           </SerifText>
+          <View style={styles.kv}>
+            <Meta>Version</Meta>
+            <Meta style={styles.versionValue}>
+              {Constants.expoConfig?.version ?? "—"}
+            </Meta>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -103,5 +110,8 @@ const styles = StyleSheet.create((theme) => ({
   },
   action: {
     color: theme.colors.accent,
+  },
+  versionValue: {
+    color: theme.colors.inkSoft,
   },
 }));
