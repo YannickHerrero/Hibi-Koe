@@ -11,6 +11,7 @@ import {
   useStorageUsage,
 } from "../../src/features/settings";
 import { TimeTrackingSection } from "../../src/features/timeTracking";
+import { CheckUpdatesButton } from "../../src/features/updates";
 import { Display, Label, Masthead, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function SettingsScreen() {
@@ -85,6 +86,7 @@ export default function SettingsScreen() {
               {Constants.expoConfig?.version ?? "—"}
             </Meta>
           </View>
+          <CheckUpdatesButton />
         </View>
       </ScrollView>
     </SafeAreaView>
