@@ -9,6 +9,7 @@ import { configureAudioSession } from "../src/audio/session";
 import { initDb } from "../src/db";
 import { hydrateFurigana, hydrateMatchUnderline } from "../src/features/mining";
 import { hydratePlaybackPrefs } from "../src/features/player";
+import { startTimeTracker } from "../src/features/timeTracking";
 import { UpdatePrompt } from "../src/features/updates";
 import { useAppFonts } from "../src/theme/fonts";
 import { hydrateTheme } from "../src/theme/useThemeSwitcher";
@@ -50,6 +51,8 @@ function RootLayoutInner() {
     configureAudioSession().catch((err) => {
       console.warn("Failed to configure audio session", err);
     });
+
+    startTimeTracker();
   }, []);
 
   const initFailed = fontsError != null || dbError != null;

@@ -3,3 +3,6 @@
 import "../../theme/unistyles";
 
 export { startTimeTracker, stopTimeTracker } from "./tracker";
+export { type SessionSyncProgress, syncAllPendingSessions, syncSession } from "./sync";
+export { TimeTrackingSection } from "./TimeTrackingSection";
+export { type TodayTotals, useTodayTotals } from "./useTodayTotals";

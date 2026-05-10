@@ -10,6 +10,7 @@ import {
   ThemePicker,
   useStorageUsage,
 } from "../../src/features/settings";
+import { TimeTrackingSection } from "../../src/features/timeTracking";
 import { Display, Label, Masthead, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function SettingsScreen() {
@@ -41,7 +42,13 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Label num="№ 03">Vocabulary</Label>
+          <Label num="№ 03">Listening time</Label>
+          <Rule variant="soft" style={styles.rule} />
+          <TimeTrackingSection />
+        </View>
+
+        <View style={styles.section}>
+          <Label num="№ 04">Vocabulary</Label>
           <Rule variant="soft" style={styles.rule} />
           <View style={styles.kv}>
             <Meta>Saved entries</Meta>
@@ -53,7 +60,7 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Label num="№ 04">Storage</Label>
+          <Label num="№ 05">Storage</Label>
           <Rule variant="soft" style={styles.rule} />
           <View style={styles.kv}>
             <Meta>Tracks</Meta>
@@ -66,7 +73,7 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Label num="№ 05">About</Label>
+          <Label num="№ 06">About</Label>
           <Rule variant="soft" style={styles.rule} />
           <SerifText soft italic>
             Hibi Koe — passive listening immersion. Part of the Hibi ecosystem; the design system is
