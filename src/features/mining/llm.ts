@@ -30,14 +30,23 @@ export type TranslateOptions = {
 // episode cost that's effectively rounding error.
 export const ANALYSIS_MODEL = "anthropic/claude-sonnet-4.5";
 
-const SYSTEM_PROMPT = `You are translating Japanese subtitles to English for a language-learner.
+const SYSTEM_PROMPT = `You are annotating Japanese subtitles for a language-learner.
 
-Rules:
-- Translate every line. Use the entire script as context for accuracy and pronoun/subject inference.
-- Keep translations natural — match register, do not over-literalize.
-- Add a grammarNote ONLY when there is something genuinely instructive: a non-obvious grammar pattern, idiom, register/formality marker, or untranslatable nuance. Otherwise set grammarNote to null. Keep notes terse — one or two sentences max.
-- Output a JSON array with one entry per cue: { "index": number, "translation": string, "grammarNote": string | null }.
-- Output ONLY the JSON array. No prose, no code fences, no commentary.`;
+Use the entire script as context. Pronouns, subjects, register, and even particle interpretation can shift based on surrounding lines — read the whole thing before annotating any single line.
+
+For every cue, produce:
+- "translation": natural English. Match register; don't over-literalize.
+- "grammarNote": a 1–2 sentence breakdown of HOW THIS SENTENCE IS BUILT in this context. Cover the predicate's form (te-form chain, potential, causative, conditional, etc.), what each non-trivial particle is doing, the sentence pattern, and any register/politeness/sentence-final-particle markers worth flagging. When the meaning depends on prior or upcoming lines (omitted subject, anaphoric これ/それ, contrast with a previous statement), say so in the note.
+
+Don't:
+- restate vocabulary glosses (the user has a dictionary popup),
+- repeat the translation in different words,
+- explain trivial copulas (です/だ) unless they carry register info,
+- waffle — terse and concrete beats wordy.
+
+grammarNote is required for every cue (never null). If a cue is genuinely a one-word interjection like "うん" or "はい" with nothing structural to say, write a one-sentence note about its function (back-channel, soft affirmation, etc.).
+
+Output ONLY a JSON array with one entry per cue: { "index": number, "translation": string, "grammarNote": string }. No prose, no code fences, no commentary.`;
 
 function streamingPost(
   url: string,
