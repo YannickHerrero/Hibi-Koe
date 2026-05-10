@@ -8,6 +8,7 @@ export { PlayerSettingsModal } from "./PlayerSettingsModal";
 export { Scrubber } from "./Scrubber";
 export { SpeedPicker } from "./SpeedPicker";
 export {
+  getState,
   hydratePlaybackPrefs,
   loadTrack,
   type PlaybackContext,
@@ -20,6 +21,7 @@ export {
   setRandomMode,
   setRate,
   skipBy,
+  subscribe,
   toggleLoopMode,
   togglePlay,
   toggleRandomMode,
