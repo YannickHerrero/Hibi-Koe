@@ -1,4 +1,5 @@
 import { type AudioPlayer, type AudioStatus, createAudioPlayer } from "expo-audio";
+import { AppState, type AppStateStatus } from "react-native";
 import { listPlaylistTracks, listTracks, type Track } from "../../db";
 import { getPref, setPref } from "../../db/prefs";
 
@@ -337,3 +338,14 @@ export function unload(): void {
   detach();
   setState(initialState);
 }
+
+// Re-bind the system MediaSession when the app comes back to the
+// foreground. Android can drop the binding while we're backgrounded
+// (especially after the OS reaps memory); without re-binding the
+// notification controls become unresponsive even though the audio
+// itself is still playing.
+AppState.addEventListener("change", (status: AppStateStatus) => {
+  if (status === "active" && state.track) {
+    bindLockScreen(state.track);
+  }
+});
