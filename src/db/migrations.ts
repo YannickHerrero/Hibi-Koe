@@ -92,10 +92,40 @@ const migrations: Migration[] = [
         ON saved_words (sync_state);
     `,
   },
+  {
+    version: 5,
+    up: `
+      -- User-curated playlists. ON DELETE CASCADE so removing a track
+      -- (or a whole playlist) cleans up the join rows automatically.
+      PRAGMA foreign_keys = ON;
+
+      CREATE TABLE IF NOT EXISTS playlists (
+        id          TEXT PRIMARY KEY NOT NULL,
+        name        TEXT NOT NULL,
+        created_at  INTEGER NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS playlist_tracks (
+        playlist_id TEXT NOT NULL,
+        track_id    TEXT NOT NULL,
+        position    INTEGER NOT NULL,
+        added_at    INTEGER NOT NULL,
+        PRIMARY KEY (playlist_id, track_id),
+        FOREIGN KEY (playlist_id) REFERENCES playlists(id) ON DELETE CASCADE,
+        FOREIGN KEY (track_id)    REFERENCES tracks(id)    ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_playlist_tracks_position
+        ON playlist_tracks (playlist_id, position);
+    `,
+  },
 ];
 
 export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
   await db.execAsync("PRAGMA journal_mode = WAL;");
+  // FK pragma is per-connection; enable it before running any migration
+  // that depends on cascading deletes (v5+).
+  await db.execAsync("PRAGMA foreign_keys = ON;");
   await db.execAsync(
     "CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY NOT NULL);",
   );
