@@ -20,6 +20,7 @@ export default function TabsLayout() {
       >
         <Tabs.Screen name="index" options={{ title: "Library" }} />
         <Tabs.Screen name="vocab" options={{ title: "Vocabulary" }} />
+        <Tabs.Screen name="playlists" options={{ title: "Playlists" }} />
         <Tabs.Screen name="settings" options={{ title: "Settings" }} />
       </Tabs>
       <MiniPlayer />
