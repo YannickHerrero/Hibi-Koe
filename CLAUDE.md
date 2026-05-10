@@ -46,15 +46,23 @@ Mobile passive-listening immersion app for the Hibi ecosystem. Audio + subtitle 
 app/                      expo-router routes
   _layout.tsx             root Stack + audio/db init
   (tabs)/library.tsx
+  (tabs)/vocab.tsx
+  (tabs)/playlists.tsx
   (tabs)/settings.tsx
   player/[id].tsx         full-screen modal
   import.tsx              import wizard modal
   track/[id]/edit.tsx     rename modal
+  vocab/[id].tsx          saved-word detail modal
+  playlist/[id].tsx       playlist detail (tracks, reorder)
 src/
   audio/                  global session config (configureAudioSession)
   db/                     client, migrations, tracks repo, prefs k/v
   features/
-    library/              TrackArtwork, TrackRow, list hook, context menu
+    library/              TrackArtwork, TrackRow, list hook,
+                          TrackContextSheet (editorial bottom sheet),
+                          PlaylistPickerSheet (multi-add to playlists)
+    playlists/            usePlaylist(s) hooks + PlaylistContextSheet
+                          (rename/delete via the same sheet pattern)
     player/               singleton store, hooks, Transport, Scrubber, SpeedPicker, MiniPlayer
     subtitles/            SRT parser, cue index, pane, offset control, loader hook
     import/               document pickers, sandbox copy, metadata probe, saveTrack
@@ -72,7 +80,13 @@ src/
 ## Where things live
 
 - **Singleton playback** — `src/features/player/store.ts`. Components subscribe via the
-  `usePlayback*` hooks in `src/features/player/hooks.ts`.
+  `usePlayback*` hooks in `src/features/player/hooks.ts`. Each `loadTrack(track, context)`
+  records a `PlaybackContext` (library | playlist:<id>); end-of-track auto-advance walks
+  that list (loop/random still take precedence). End of list → pause + seek 0.
+- **Playlists** — many-to-many via `playlist_tracks` (migration v5). Per-playlist position
+  is gapless; reorder is a single transaction in `reorderPlaylistTracks`. Cascade deletes
+  on `tracks` and `playlists` clean the join automatically (PRAGMA foreign_keys is enabled
+  per connection in `src/db/migrations.ts`).
 - **Theme** — registered once in `src/theme/unistyles.ts`. Read via `useUnistyles()` or
   Unistyles' `StyleSheet.create((theme) => …)` callback. The user's selection is
   persisted via `useThemeSwitcher` ↔ the prefs table.
