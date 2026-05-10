@@ -19,7 +19,7 @@ import {
 } from "../../db";
 import { listUnsyncedSavedWords } from "../../db";
 import { segmentFurigana } from "./furigana";
-import { getHibiBaseUrl, getHibiClient } from "./hibiClient";
+import { getHibiClient, HIBI_BASE_URL } from "./hibiClient";
 import { extractKanjiList } from "./kanjiList";
 
 const CLIP_DIR = new Directory(Paths.cache, "hibi-sync");
@@ -68,7 +68,7 @@ async function syncWord(word: SavedWord): Promise<void> {
   await markSavedWordSyncing(word.id);
   let clipPath: string | null = null;
   try {
-    const baseUrl = await getHibiBaseUrl();
+    const baseUrl = HIBI_BASE_URL;
     console.log(tag, "base url", baseUrl);
     const client = await getHibiClient();
     if (!client) throw new Error("Hibi API key not configured.");

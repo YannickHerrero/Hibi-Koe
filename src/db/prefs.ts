@@ -8,8 +8,7 @@ export type PrefKey =
   | "loopMode"
   | "randomMode"
   | "furiganaOn"
-  | "matchUnderlineOn"
-  | "hibiBaseUrl";
+  | "matchUnderlineOn";
 
 export async function getPref(key: PrefKey): Promise<string | null> {
   const db = await getDb();

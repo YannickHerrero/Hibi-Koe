@@ -3,31 +3,19 @@
 // on every call would force a fresh RNFile/Blob upload context.
 
 import { createHibiClient, type HibiClient } from "hibi-client";
-import { getPref, setPref } from "../../db";
 import { getHibiApiKey } from "./hibiApiKey";
 
-export const DEFAULT_HIBI_BASE_URL = "https://api.hibi.app";
+export const HIBI_BASE_URL = "https://hibi-api.vercel.app";
 
-let cached: { client: HibiClient; baseUrl: string } | null = null;
-
-export async function getHibiBaseUrl(): Promise<string> {
-  return (await getPref("hibiBaseUrl")) || DEFAULT_HIBI_BASE_URL;
-}
-
-export async function setHibiBaseUrl(url: string): Promise<void> {
-  await setPref("hibiBaseUrl", url.trim().replace(/\/+$/, ""));
-  resetHibiClient();
-}
+let cached: HibiClient | null = null;
 
 export async function getHibiClient(): Promise<HibiClient | null> {
-  const baseUrl = await getHibiBaseUrl();
-  if (cached && cached.baseUrl === baseUrl) return cached.client;
+  if (cached) return cached;
   const apiKey = await getHibiApiKey();
   if (!apiKey) return null;
-  console.log("[hibi-client] creating client for", baseUrl);
-  const client = createHibiClient({ apiKey, baseUrl });
-  cached = { client, baseUrl };
-  return client;
+  console.log("[hibi-client] creating client for", HIBI_BASE_URL);
+  cached = createHibiClient({ apiKey, baseUrl: HIBI_BASE_URL });
+  return cached;
 }
 
 // Called from setHibiApiKey / clearHibiApiKey so the next getHibiClient
