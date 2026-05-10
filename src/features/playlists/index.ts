@@ -2,4 +2,5 @@
 // at module load needs Unistyles configured.
 import "../../theme/unistyles";
 
+export { usePlaylist } from "./usePlaylist";
 export { usePlaylists } from "./usePlaylists";

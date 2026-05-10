@@ -19,7 +19,7 @@ export default function PlaylistsScreen() {
       setName("");
       setCreating(false);
       refresh();
-      router.push(`/playlist/${created.id}`);
+      router.push(`/playlist/${created.id}` as never);
     } catch (err) {
       console.error("[playlists] create failed", err);
     }
@@ -80,7 +80,7 @@ export default function PlaylistsScreen() {
 
 function PlaylistRow({ playlist }: { playlist: Playlist }) {
   return (
-    <Pressable onPress={() => router.push(`/playlist/${playlist.id}`)} style={styles.row}>
+    <Pressable onPress={() => router.push(`/playlist/${playlist.id}` as never)} style={styles.row}>
       <View style={styles.rowText}>
         <SerifText size={18}>{playlist.name}</SerifText>
         <Meta style={styles.count}>
