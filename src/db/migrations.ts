@@ -119,6 +119,29 @@ const migrations: Migration[] = [
         ON playlist_tracks (playlist_id, position);
     `,
   },
+  {
+    version: 6,
+    up: `
+      -- Listening time tracker. Each row is one continuous "playing"
+      -- interval (collapsing pauses < 60 s). Synced to Hibi's
+      -- /v1/sessions endpoint via sync_state.
+      CREATE TABLE IF NOT EXISTS listening_sessions (
+        id           TEXT PRIMARY KEY NOT NULL,
+        started_at   INTEGER NOT NULL,
+        ended_at     INTEGER NOT NULL,
+        duration_ms  INTEGER NOT NULL,
+        track_id     TEXT,
+        sync_state   TEXT,
+        sync_error   TEXT,
+        created_at   INTEGER NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_listening_sessions_sync_state
+        ON listening_sessions (sync_state);
+      CREATE INDEX IF NOT EXISTS idx_listening_sessions_started_at
+        ON listening_sessions (started_at);
+    `,
+  },
 ];
 
 export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
