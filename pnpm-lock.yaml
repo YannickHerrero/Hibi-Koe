@@ -72,8 +72,8 @@ importers:
         specifier: ^55.0.21
         version: 55.0.21(expo@55.0.23)(react-native@0.83.9(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
       hibi-client:
-        specifier: ^0.1.3
-        version: 0.1.3
+        specifier: ^0.2.0
+        version: 0.2.0
       kuromoji-react-native:
         specifier: ^1.0.1
         version: 1.0.1
@@ -2363,8 +2363,8 @@ packages:
   hermes-parser@0.35.0:
     resolution: {integrity: sha512-9JLjeHxBx8T4CAsydZR49PNZUaix+WpQJwu9p2010lu+7Kwl6D/7wYFFJxoz+aXkaaClp9Zfg6W6/zVlSJORaA==}
 
-  hibi-client@0.1.3:
-    resolution: {integrity: sha512-tOHLIPWPQFc4KKgGRSvhLU5Rjsfwg7B5ZYuOdXhuEuzpw94ctlPCID3tDBg34H53Ekli/WWW4ThQcGZaxXeW7Q==}
+  hibi-client@0.2.0:
+    resolution: {integrity: sha512-uCpSUcAqyzL+xT9ixwguB0puDUFAjlr3nqKL70e8oLz2fWHCcOn3I6DkQidrXX6htMuz47XT/6HEtb1vlgh/AQ==}
 
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
@@ -6367,7 +6367,7 @@ snapshots:
     dependencies:
       hermes-estree: 0.35.0
 
-  hibi-client@0.1.3:
+  hibi-client@0.2.0:
     dependencies:
       zod: 4.4.3
 
