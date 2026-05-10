@@ -3,13 +3,14 @@ import { useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { createPlaylist, type Playlist } from "../../src/db";
-import { usePlaylists } from "../../src/features/playlists";
+import { PlaylistContextSheet, usePlaylists } from "../../src/features/playlists";
 import { Display, Field, Label, Masthead, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function PlaylistsScreen() {
   const { playlists, error, refresh } = usePlaylists();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
+  const [contextPlaylist, setContextPlaylist] = useState<Playlist | null>(null);
   const isEmpty = playlists !== null && playlists.length === 0;
 
   const onCreate = async () => {
@@ -69,18 +70,36 @@ export default function PlaylistsScreen() {
           <FlatList
             data={playlists ?? []}
             keyExtractor={(p) => p.id}
-            renderItem={({ item }) => <PlaylistRow playlist={item} />}
+            renderItem={({ item }) => (
+              <PlaylistRow playlist={item} onLongPress={() => setContextPlaylist(item)} />
+            )}
             contentContainerStyle={styles.list}
           />
         )}
       </View>
+      <PlaylistContextSheet
+        playlist={contextPlaylist}
+        visible={contextPlaylist !== null}
+        onClose={() => setContextPlaylist(null)}
+        onChanged={refresh}
+      />
     </SafeAreaView>
   );
 }
 
-function PlaylistRow({ playlist }: { playlist: Playlist }) {
+function PlaylistRow({
+  playlist,
+  onLongPress,
+}: {
+  playlist: Playlist;
+  onLongPress?: () => void;
+}) {
   return (
-    <Pressable onPress={() => router.push(`/playlist/${playlist.id}` as never)} style={styles.row}>
+    <Pressable
+      onPress={() => router.push(`/playlist/${playlist.id}` as never)}
+      onLongPress={onLongPress}
+      style={styles.row}
+    >
       <View style={styles.rowText}>
         <SerifText size={18}>{playlist.name}</SerifText>
         <Meta style={styles.count}>
