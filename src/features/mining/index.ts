@@ -11,7 +11,13 @@ export {
 } from "./analysisStore";
 export { clearApiKey, getApiKey, hasApiKey, setApiKey } from "./apiKey";
 export { clearHibiApiKey, getHibiApiKey, hasHibiApiKey, setHibiApiKey } from "./hibiApiKey";
-export { getHibiClient, resetHibiClient } from "./hibiClient";
+export {
+  DEFAULT_HIBI_BASE_URL,
+  getHibiBaseUrl,
+  getHibiClient,
+  resetHibiClient,
+  setHibiBaseUrl,
+} from "./hibiClient";
 export { segmentFurigana } from "./furigana";
 export { extractKanjiList } from "./kanjiList";
 export { type SyncProgress, syncAllPending, syncSavedWord } from "./sync";

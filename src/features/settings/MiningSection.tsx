@@ -10,6 +10,7 @@ import {
 } from "../mining";
 import { ApiKeyField } from "./ApiKeyField";
 import { DictSetupCard } from "./DictSetupCard";
+import { HibiBaseUrlField } from "./HibiBaseUrlField";
 
 const hibiAccessor = {
   get: getHibiApiKey,
@@ -42,6 +43,16 @@ export function MiningSection() {
         <SerifText soft italic style={styles.hint}>
           Mined words sync to your Hibi library when set. Generate a key at hibi.app → API
           keys.
+        </SerifText>
+      </View>
+
+      <View style={styles.row}>
+        <Meta>Hibi API URL</Meta>
+        <Rule variant="soft" style={styles.rule} />
+        <HibiBaseUrlField />
+        <SerifText soft italic style={styles.hint}>
+          Override the API host. Use your Vercel preview URL during dev, or leave blank
+          for the default.
         </SerifText>
       </View>
 
