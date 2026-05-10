@@ -19,7 +19,7 @@ import {
 } from "../../db";
 import { listUnsyncedSavedWords } from "../../db";
 import { segmentFurigana } from "./furigana";
-import { getHibiClient } from "./hibiClient";
+import { getHibiBaseUrl, getHibiClient } from "./hibiClient";
 import { extractKanjiList } from "./kanjiList";
 
 const CLIP_DIR = new Directory(Paths.cache, "hibi-sync");
@@ -62,9 +62,14 @@ export async function syncAllPending(opts?: {
 }
 
 async function syncWord(word: SavedWord): Promise<void> {
+  const tag = `[hibi-sync ${word.id.slice(0, 8)}]`;
+  const startedAt = Date.now();
+  console.log(tag, "begin", { surface: word.surface, trackId: word.trackId });
   await markSavedWordSyncing(word.id);
   let clipPath: string | null = null;
   try {
+    const baseUrl = await getHibiBaseUrl();
+    console.log(tag, "base url", baseUrl);
     const client = await getHibiClient();
     if (!client) throw new Error("Hibi API key not configured.");
 
@@ -73,11 +78,19 @@ async function syncWord(word: SavedWord): Promise<void> {
 
     ensureClipDir();
     const requested = `${CLIP_DIR.uri}clip-${word.id}.m4a`;
+    console.log(tag, "extracting audio", {
+      startMs: word.audioStartMs,
+      endMs: word.audioEndMs,
+      durationMs: word.audioEndMs - word.audioStartMs,
+      from: track.audioPath,
+    });
+    const t0 = Date.now();
     clipPath = await extractAudio(track.audioPath, {
       startMs: word.audioStartMs,
       endMs: word.audioEndMs,
       outPath: requested,
     });
+    console.log(tag, "extracted in", `${Date.now() - t0}ms`, "→", clipPath);
 
     const clipFile = new File(clipPath);
     if (!clipFile.exists) throw new Error("audio extraction returned a missing file");
@@ -88,31 +101,49 @@ async function syncWord(word: SavedWord): Promise<void> {
       : filename.endsWith(".aac")
         ? "audio/aac"
         : "audio/mp4";
-    const { key: audioKey } = await client.uploads.audio({
-      uri: clipPath,
-      name: filename,
-      type: mime,
-    });
+    console.log(tag, "uploading", { url: `${baseUrl}/v1/uploads/audio`, mime });
+    const t1 = Date.now();
+    let audioKey: string;
+    try {
+      const res = await client.uploads.audio({
+        uri: clipPath,
+        name: filename,
+        type: mime,
+      });
+      audioKey = res.key;
+      console.log(tag, "uploaded in", `${Date.now() - t1}ms`, "→", audioKey);
+    } catch (err) {
+      throw decorateNetworkError(err, "uploads/audio", baseUrl);
+    }
 
     const focusReading = word.reading ?? word.surface;
-    await client.cards.create({
-      sentence: word.sentenceJp,
-      focusWord: word.surface,
-      focusWordReading: focusReading,
-      furigana: segmentFurigana(word.surface, word.reading),
-      english: word.sentenceEn ?? "",
-      glosses: word.glosses,
-      grammarNote: word.grammarNote,
-      kanjiList: extractKanjiList(word.surface),
-      imageKey: null,
-      audioKey,
-      source: "hibi-koe",
-      tags: ["mined"],
-    });
+    console.log(tag, "creating card", { url: `${baseUrl}/v1/cards`, focusWord: word.surface });
+    const t2 = Date.now();
+    try {
+      await client.cards.create({
+        sentence: word.sentenceJp,
+        focusWord: word.surface,
+        focusWordReading: focusReading,
+        furigana: segmentFurigana(word.surface, word.reading),
+        english: word.sentenceEn ?? "",
+        glosses: word.glosses,
+        grammarNote: word.grammarNote,
+        kanjiList: extractKanjiList(word.surface),
+        imageKey: null,
+        audioKey,
+        source: "hibi-koe",
+        tags: ["mined"],
+      });
+    } catch (err) {
+      throw decorateNetworkError(err, "cards", baseUrl);
+    }
+    console.log(tag, "card created in", `${Date.now() - t2}ms`);
 
     await markSavedWordSynced(word.id, Date.now());
+    console.log(tag, "done in", `${Date.now() - startedAt}ms`);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    console.error(tag, "failed:", message, err);
     await markSavedWordFailed(word.id, message);
     throw err;
   } finally {
@@ -121,8 +152,21 @@ async function syncWord(word: SavedWord): Promise<void> {
         const f = new File(clipPath);
         if (f.exists) f.delete();
       } catch (cleanupErr) {
-        console.warn("[hibi-sync] clip cleanup failed", clipPath, cleanupErr);
+        console.warn(tag, "clip cleanup failed", clipPath, cleanupErr);
       }
     }
   }
+}
+
+// RN's fetch surfaces "Network request failed" with no URL or status,
+// which is useless for diagnosis. Re-throw with the endpoint we tried.
+function decorateNetworkError(err: unknown, endpoint: string, baseUrl: string): Error {
+  if (err instanceof TypeError && /Network request failed/i.test(err.message)) {
+    return new Error(
+      `Network request failed: cannot reach ${baseUrl}/v1/${endpoint}. ` +
+        `Check that the Hibi API URL in Settings is correct and reachable from this device.`,
+    );
+  }
+  if (err instanceof Error) return err;
+  return new Error(String(err));
 }
