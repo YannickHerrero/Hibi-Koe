@@ -10,6 +10,7 @@ import {
   useTrackContextSheet,
   useTracks,
 } from "../../src/features/library";
+import { loadTrack } from "../../src/features/player";
 import { Display, Label, Masthead, Meta, Rule, SafeAreaView, SerifText } from "../../src/ui";
 
 export default function LibraryScreen() {
@@ -50,7 +51,13 @@ export default function LibraryScreen() {
             renderItem={({ item }) => (
               <TrackRow
                 track={item}
-                onPress={(t) => router.push(`/player/${t.id}`)}
+                onPress={(t) => {
+                  // Record the launched-from list before navigating so the
+                  // player's auto-advance walks Library order even if the
+                  // player screen short-circuits its own loadTrack call.
+                  loadTrack(t, { kind: "library" });
+                  router.push(`/player/${t.id}`);
+                }}
                 onLongPress={(t) => sheet.open(t)}
               />
             )}
