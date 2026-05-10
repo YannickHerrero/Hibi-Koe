@@ -42,17 +42,24 @@ export type AnalyzeOptions = {
 
 export async function analyzeTrack(opts: AnalyzeOptions): Promise<AnalysisData> {
   const { trackId, subtitlePath, onProgress, onLog, signal, skipTranslate } = opts;
-  const log = (s: string) => onLog?.(s);
+  const tag = `[analyze ${trackId.slice(0, 8)}]`;
+  const log = (s: string) => {
+    console.log(tag, s);
+    onLog?.(s);
+  };
 
   await updateTrack(trackId, { analysisState: "analyzing", analysisError: null });
   onProgress?.({ phase: "starting" });
+  console.log(tag, "begin", { subtitlePath });
 
   try {
-    log("reading + parsing SRT");
+    log(`reading SRT via textSync from ${subtitlePath}`);
     // textSync bypasses the RN Blob bridge that the async .text() goes
     // through; the bridge intermittently rejects with "The specified
     // blob is invalid" on Android when the blob is GC'd before resolve.
+    const t0 = Date.now();
     const srtText = new File(subtitlePath).textSync();
+    log(`SRT read in ${Date.now() - t0}ms (${srtText.length} chars)`);
     const rawCues = parseSrt(srtText);
     if (rawCues.length === 0) {
       throw new Error("No cues found in subtitle file.");
@@ -66,7 +73,9 @@ export async function analyzeTrack(opts: AnalyzeOptions): Promise<AnalysisData> 
 
     onProgress?.({ phase: "warming-tokenizer" });
     log("warming up kuromoji tokenizer");
+    const t1 = Date.now();
     await getTokenizer((m) => log(`kuromoji: ${m}`));
+    log(`tokenizer warm in ${Date.now() - t1}ms`);
 
     log(`tokenizing ${rawCues.length} cues`);
     const cues: AnalyzedCue[] = [];
@@ -130,7 +139,7 @@ export async function analyzeTrack(opts: AnalyzeOptions): Promise<AnalysisData> 
     return data;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[mining] analyzeTrack failed", trackId, err);
+    console.error(tag, "failed:", message, err);
     await updateTrack(trackId, {
       analysisState: "failed",
       analysisError: message,

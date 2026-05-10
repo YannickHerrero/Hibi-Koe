@@ -25,11 +25,17 @@ RNDictionaryLoader.prototype.loadArrayBuffer = (
   url: string,
   callback: (err: Error | null, buffer: ArrayBuffer | null) => void,
 ) => {
+  const tag = `[kuromoji-load ${url.split("/").pop() ?? url}]`;
   try {
+    console.log(tag, "open", url);
+    const t0 = Date.now();
     const bytes = new File(url).bytesSync();
+    console.log(tag, "read", bytes.byteLength, "bytes in", `${Date.now() - t0}ms`);
     const inflated = pako.ungzip(bytes);
+    console.log(tag, "inflated", inflated.byteLength, "bytes");
     callback(null, inflated.buffer as ArrayBuffer);
   } catch (err) {
+    console.error(tag, "failed:", err instanceof Error ? err.message : String(err), err);
     callback(err instanceof Error ? err : new Error(String(err)), null);
   }
 };
@@ -111,12 +117,18 @@ const DICT_MODULES: Record<string, number> = {
 let tokenizerPromise: Promise<KuromojiTokenizer> | null = null;
 
 async function buildTokenizer(log?: (s: string) => void): Promise<KuromojiTokenizer> {
+  const tag = "[kuromoji-init]";
+  console.log(tag, "begin");
   log?.("resolving 12 kuromoji dict assets");
   const filenames = Object.keys(DICT_MODULES);
+  const t0 = Date.now();
   const assets = await Asset.loadAsync(filenames.map((f) => DICT_MODULES[f]));
+  console.log(tag, "assets resolved in", `${Date.now() - t0}ms`);
   const dicPath: Record<string, string> = {};
   filenames.forEach((f, i) => {
-    dicPath[f] = assets[i].localUri ?? assets[i].uri;
+    const uri = assets[i].localUri ?? assets[i].uri;
+    dicPath[f] = uri;
+    console.log(tag, f, "→", uri);
   });
 
   log?.("downloading + decompressing dict files");
@@ -124,9 +136,13 @@ async function buildTokenizer(log?: (s: string) => void): Promise<KuromojiTokeni
   // biome-ignore lint/suspicious/noExplicitAny: kuromoji is untyped JS
   const builder = (km as any).default ?? km;
   return await new Promise<KuromojiTokenizer>((resolve, reject) => {
+    const t1 = Date.now();
     builder.builder({ dicPath }).build((err: Error | null, tokenizer: KuromojiTokenizer) => {
-      if (err) reject(err);
-      else {
+      if (err) {
+        console.error(tag, "builder.build failed:", err.message, err);
+        reject(err);
+      } else {
+        console.log(tag, "ready in", `${Date.now() - t1}ms`);
         log?.("tokenizer ready");
         resolve(tokenizer);
       }
