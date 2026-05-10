@@ -1,5 +1,5 @@
 import { type AudioPlayer, type AudioStatus, createAudioPlayer } from "expo-audio";
-import { listTracks, type Track } from "../../db";
+import { listPlaylistTracks, listTracks, type Track } from "../../db";
 import { getPref, setPref } from "../../db/prefs";
 
 // Module-level singleton player. Audio is one-at-a-time in v1: loading
@@ -191,8 +191,9 @@ export function loadTrack(track: Track, context: PlaybackContext = LIBRARY_CONTE
           console.warn("[player] randomMode pickNext failed", err),
         );
       } else {
-        next.pause();
-        next.seekTo(0).catch(() => {});
+        playNextInContext(track.id, state.context).catch((err) =>
+          console.warn("[player] auto-advance failed", err),
+        );
       }
     }
   });
@@ -203,7 +204,26 @@ async function playRandomNext(currentId: string): Promise<void> {
   const others = tracks.filter((t) => t.id !== currentId);
   if (others.length === 0) return;
   const next = others[Math.floor(Math.random() * others.length)];
-  loadTrack(next);
+  loadTrack(next, state.context);
+  player?.play();
+}
+
+// Walk the current context's ordered list and start the track that
+// follows currentId. End-of-list → pause + snap to 0 (matches the
+// pre-auto-advance single-track behaviour).
+async function playNextInContext(currentId: string, context: PlaybackContext): Promise<void> {
+  const list =
+    context.kind === "playlist"
+      ? await listPlaylistTracks(context.playlistId)
+      : await listTracks();
+  const idx = list.findIndex((t) => t.id === currentId);
+  const next = idx >= 0 ? list[idx + 1] : undefined;
+  if (!next) {
+    player?.pause();
+    player?.seekTo(0).catch(() => {});
+    return;
+  }
+  loadTrack(next, context);
   player?.play();
 }
 
