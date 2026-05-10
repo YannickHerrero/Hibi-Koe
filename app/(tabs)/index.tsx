@@ -1,7 +1,10 @@
 import { router } from "expo-router";
 import { FlatList, Pressable, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
+import { useState } from "react";
+import type { Track } from "../../src/db";
 import {
+  PlaylistPickerSheet,
   TrackContextSheet,
   TrackRow,
   useTrackContextSheet,
@@ -13,6 +16,7 @@ export default function LibraryScreen() {
   const { tracks, error, refresh } = useTracks();
   const isEmpty = tracks !== null && tracks.length === 0;
   const sheet = useTrackContextSheet();
+  const [pickerTrack, setPickerTrack] = useState<Track | null>(null);
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
@@ -60,8 +64,14 @@ export default function LibraryScreen() {
         onClose={sheet.close}
         actions={{
           onEdit: (target) => router.push(`/track/${target.id}/edit`),
+          onAddToPlaylist: (target) => setPickerTrack(target),
           onDeleted: refresh,
         }}
+      />
+      <PlaylistPickerSheet
+        track={pickerTrack}
+        visible={pickerTrack !== null}
+        onClose={() => setPickerTrack(null)}
       />
     </SafeAreaView>
   );

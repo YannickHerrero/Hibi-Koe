@@ -4,6 +4,7 @@ import "../../theme/unistyles";
 
 export { confirmDeleteTrack } from "./deleteTrackFlow";
 export { ArtworkSizes, TrackArtwork } from "./TrackArtwork";
+export { PlaylistPickerSheet } from "./PlaylistPickerSheet";
 export { TrackContextSheet, type TrackSheetActions } from "./TrackContextSheet";
 export { TrackRow } from "./TrackRow";
 export { type TrackContextSheetState, useTrackContextSheet } from "./useTrackContextSheet";

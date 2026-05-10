@@ -11,6 +11,7 @@ import { confirmDeleteTrack } from "./deleteTrackFlow";
 
 export type TrackSheetActions = {
   onEdit: (track: Track) => void;
+  onAddToPlaylist?: (track: Track) => void;
   onDeleted: () => void;
 };
 
@@ -90,6 +91,23 @@ export function TrackContextSheet({ track, visible, actions, onClose }: Props) {
                 <Meta>Edit details</Meta>
               </Pressable>
               <Rule variant="soft" />
+
+              {actions.onAddToPlaylist ? (
+                <>
+                  <Pressable
+                    onPress={() => {
+                      if (!track) return;
+                      onClose();
+                      actions.onAddToPlaylist?.(track);
+                    }}
+                    style={styles.row}
+                    hitSlop={6}
+                  >
+                    <Meta>Add to playlist…</Meta>
+                  </Pressable>
+                  <Rule variant="soft" />
+                </>
+              ) : null}
 
               <Pressable onPress={onDelete} style={styles.row} hitSlop={6}>
                 <Meta style={styles.destructive}>Delete</Meta>
