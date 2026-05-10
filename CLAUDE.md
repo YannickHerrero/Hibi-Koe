@@ -67,6 +67,11 @@ src/
     subtitles/            SRT parser, cue index, pane, offset control, loader hook
     import/               document pickers, sandbox copy, metadata probe, saveTrack
     settings/             theme picker, mining section, storage usage
+    timeTracking/         player-state subscriber that opens/closes
+                          listening_sessions; pause >60 s closes the
+                          session, partial flush every 60 s; sync
+                          orchestrator pushes rows to /v1/sessions
+                          (kind: "passive-listening", source: "hibi-koe")
     mining/               kuromoji bootstrap, dict + dict-installer,
                           longest-match, OpenRouter client + LLM,
                           orchestrator, MiningSheet, DictionaryPopup,
