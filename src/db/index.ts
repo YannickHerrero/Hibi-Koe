@@ -34,6 +34,19 @@ export {
   setPref,
 } from "./prefs";
 export {
+  addTrackToPlaylist,
+  createPlaylist,
+  deletePlaylist,
+  getPlaylist,
+  listPlaylists,
+  listPlaylistsForTrack,
+  listPlaylistTracks,
+  type Playlist,
+  removeTrackFromPlaylist,
+  renamePlaylist,
+  reorderPlaylistTracks,
+} from "./playlists";
+export {
   countSavedWords,
   deleteSavedWord,
   deleteSavedWordsForTrack,

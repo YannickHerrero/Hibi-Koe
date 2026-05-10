@@ -35,6 +35,10 @@ type Row = {
   analysis_error: string | null;
 };
 
+export type TrackRow = Row;
+export function trackFromRow(row: Row): Track {
+  return fromRow(row);
+}
 function fromRow(row: Row): Track {
   return {
     id: row.id,
