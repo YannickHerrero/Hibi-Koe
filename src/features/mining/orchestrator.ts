@@ -49,7 +49,10 @@ export async function analyzeTrack(opts: AnalyzeOptions): Promise<AnalysisData> 
 
   try {
     log("reading + parsing SRT");
-    const srtText = await new File(subtitlePath).text();
+    // textSync bypasses the RN Blob bridge that the async .text() goes
+    // through; the bridge intermittently rejects with "The specified
+    // blob is invalid" on Android when the blob is GC'd before resolve.
+    const srtText = new File(subtitlePath).textSync();
     const rawCues = parseSrt(srtText);
     if (rawCues.length === 0) {
       throw new Error("No cues found in subtitle file.");
