@@ -87,6 +87,14 @@ function detach(): void {
     statusSub = null;
   }
   if (player) {
+    // Pause first so audio actually stops before the listener / native
+    // player are torn down. Without this, a swipe-killed JS process can
+    // leave the ExoPlayer running for a few extra seconds.
+    try {
+      player.pause();
+    } catch {
+      // best-effort
+    }
     try {
       player.clearLockScreenControls();
     } catch {
@@ -101,29 +109,14 @@ function detach(): void {
   }
 }
 
-export function loadTrack(track: Track, context: PlaybackContext = LIBRARY_CONTEXT): void {
-  if (state.track?.id === track.id && player) {
-    // Same track — just refresh the context if it changed (e.g. user
-    // tapped the same row inside a playlist after starting in Library).
-    if (!sameContext(state.context, context)) {
-      setState({ ...state, context });
-    }
-    return;
-  }
-
-  detach();
-
-  const next = createAudioPlayer(track.audioPath, {
-    updateInterval: 200,
-    keepAudioSessionActive: true,
-  });
-  player = next;
-
-  // Surface the track on the Android lockscreen / notification shade and
-  // the iOS Now Playing widget. expo-audio binds the player to the
-  // platform's media session and renders artwork from the optional URL.
+// Re-binds the system MediaSession to the *current* native player. Run
+// it on every loadTrack (even the same-track short-circuit) so a fresh
+// process owns the lockscreen / notification controls instead of the
+// previous process's leftover binding.
+function bindLockScreen(track: Track): void {
+  if (!player) return;
   try {
-    next.setActiveForLockScreen(
+    player.setActiveForLockScreen(
       true,
       {
         title: track.title,
@@ -134,8 +127,30 @@ export function loadTrack(track: Track, context: PlaybackContext = LIBRARY_CONTE
       { showSeekBackward: true, showSeekForward: true },
     );
   } catch (err) {
-    console.warn("Failed to bind track to lockscreen", err);
+    console.warn("[player] setActiveForLockScreen failed", err);
   }
+}
+
+export function loadTrack(track: Track, context: PlaybackContext = LIBRARY_CONTEXT): void {
+  if (state.track?.id === track.id && player) {
+    // Same track — refresh context if changed and re-bind the lockscreen
+    // so the current native player owns the system media controls (a
+    // previous process's binding can otherwise win).
+    if (!sameContext(state.context, context)) {
+      setState({ ...state, context });
+    }
+    bindLockScreen(track);
+    return;
+  }
+
+  detach();
+
+  const next = createAudioPlayer(track.audioPath, {
+    updateInterval: 200,
+    keepAudioSessionActive: true,
+  });
+  player = next;
+  bindLockScreen(track);
 
   // Carry over the user's loop/random toggles into the new player.
   next.loop = state.loopMode;
