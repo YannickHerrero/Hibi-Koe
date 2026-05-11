@@ -40,7 +40,7 @@
     "expo-sqlite": "^55.0.15",
     "expo-status-bar": "~3.0.9",
     "expo-updates": "^55.0.21",
-    "hibi-client": "^0.2.0",
+    "hibi-client": "^0.3.0",
     "kuromoji-react-native": "^1.0.1",
     "pako": "^2.1.0",
     "react": "19.2.0",
