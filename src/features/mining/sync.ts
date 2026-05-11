@@ -21,6 +21,7 @@ import { listUnsyncedSavedWords } from "../../db";
 import { segmentFurigana } from "./furigana";
 import { getHibiClient, HIBI_BASE_URL } from "./hibiClient";
 import { extractKanjiList } from "./kanjiList";
+import { refreshKnownWords } from "./wordStatuses";
 
 const CLIP_DIR = new Directory(Paths.cache, "hibi-sync");
 
@@ -57,6 +58,11 @@ export async function syncAllPending(opts?: {
       failed += 1;
       console.warn("[hibi-sync] row failed", w.id, err);
     }
+  }
+  // Newly synced cards immediately produce SRS-derived statuses; refresh
+  // so the underline reflects them without waiting for AppState.
+  if (ok > 0) {
+    refreshKnownWords().catch(() => {});
   }
   return { ok, failed, total: pending.length };
 }
