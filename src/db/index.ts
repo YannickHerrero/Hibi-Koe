@@ -24,6 +24,16 @@ export {
   lookupEntryIdsBatch,
 } from "./dictRepo";
 export {
+  deleteKnownWord,
+  getKnownWord,
+  type KnownWord,
+  listKnownWords,
+  replaceAllKnownWords,
+  upsertManualKnownWord,
+  type WordStatus,
+  type WordStatusSource,
+} from "./knownWords";
+export {
   deletePref,
   getOffsetPresets,
   getPref,

@@ -142,6 +142,28 @@ const migrations: Migration[] = [
         ON listening_sessions (started_at);
     `,
   },
+  {
+    version: 7,
+    // Local cache of /v1/known-words. Pure mirror — full-table swap on
+    // refresh, never a source of truth. PK is (lemma, reading) so the
+    // SRS row replaces a manual row of the same identity (matching the
+    // server-side DISTINCT ON preference).
+    up: `
+      CREATE TABLE IF NOT EXISTS known_words (
+        lemma         TEXT NOT NULL,
+        reading       TEXT NOT NULL,
+        status        TEXT NOT NULL,
+        source        TEXT NOT NULL,
+        card_id       TEXT,
+        interval_days INTEGER,
+        updated_at    INTEGER NOT NULL,
+        PRIMARY KEY (lemma, reading)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_known_words_status
+        ON known_words (status);
+    `,
+  },
 ];
 
 export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
