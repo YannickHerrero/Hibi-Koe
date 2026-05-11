@@ -53,7 +53,7 @@ export {
   type AnalyzeOptions,
   analyzeTrack,
 } from "./orchestrator";
-export { TokenChip } from "./TokenChip";
+export { TokenChip, type TokenWordStatus } from "./TokenChip";
 export { getTokenizer, resetTokenizer, tokenize } from "./tokenize";
 export type {
   AnalysisData,
