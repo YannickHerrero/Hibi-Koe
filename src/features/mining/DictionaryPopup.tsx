@@ -2,12 +2,22 @@ import * as Crypto from "expo-crypto";
 import { useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
-import { insertSavedWord, type Track } from "../../db";
+import { insertSavedWord, type Track, type WordStatus } from "../../db";
 import { hasHibiApiKey } from "./hibiApiKey";
 import { syncSavedWord } from "./sync";
 import { Display, Meta, Rule, SerifText } from "../../ui";
 import { getEntries, loadDictionaries } from "./dict";
 import type { AnalyzedCue, DictEntry, DictMatch } from "./types";
+import { setManualWordStatus, useWordStatuses } from "./wordStatuses";
+
+type StatusChoice = WordStatus | "unknown";
+const STATUS_CHOICES: StatusChoice[] = ["unknown", "learning", "known", "ignored"];
+const STATUS_LABEL: Record<StatusChoice, string> = {
+  unknown: "Unknown",
+  learning: "Learning",
+  known: "Known",
+  ignored: "Ignored",
+};
 
 type Props = {
   visible: boolean;
@@ -91,6 +101,24 @@ export function DictionaryPopup({
     () => (activeMatch ? pickPrimary(activeMatch, activeMatch.entries) : null),
     [activeMatch],
   );
+
+  // Word identity used by the status row + write path. Matches the
+  // identity MiningSheet uses for the underline (dict headword).
+  const lemma = activeEntry?.forms[0] ?? activeMatch?.form ?? "";
+  const reading = activeEntry?.readings[0] ?? "";
+  const { lookup } = useWordStatuses();
+  const known = lemma ? lookup(lemma, reading) : null;
+  const isSrs = known?.source === "srs";
+  const currentStatus: StatusChoice = known?.status ?? "unknown";
+
+  const onPickStatus = (next: StatusChoice) => {
+    if (!lemma) return;
+    // Tapping the current status clears it back to unknown.
+    const target = next === currentStatus ? null : next === "unknown" ? null : next;
+    setManualWordStatus(lemma, reading, target).catch((err) =>
+      console.warn("[mining] status set failed", err),
+    );
+  };
 
   const onSave = async () => {
     if (!cue || !track || !activeMatch || !activeEntry) return;
@@ -216,6 +244,42 @@ export function DictionaryPopup({
 
           {activeEntry && cue && track ? (
             <View style={styles.footer}>
+              {/* Status row sits above the save button. SRS-derived
+                  classifications are read-only — Hibi's review queue
+                  is the source of truth for those. */}
+              {lemma ? (
+                isSrs && known ? (
+                  <View style={styles.statusReadonly}>
+                    <Meta style={styles.statusBadge}>
+                      From your Hibi reviews · {known.status}
+                      {known.intervalDays != null
+                        ? ` · interval ${known.intervalDays} days`
+                        : ""}
+                    </Meta>
+                    <Meta style={styles.statusHint}>
+                      Adjust by reviewing the card in Hibi.
+                    </Meta>
+                  </View>
+                ) : (
+                  <View style={styles.statusRow}>
+                    {STATUS_CHOICES.map((choice) => {
+                      const isCurrent = choice === currentStatus;
+                      return (
+                        <Pressable
+                          key={choice}
+                          onPress={() => onPickStatus(choice)}
+                          style={isCurrent ? styles.chipActive : styles.chip}
+                          hitSlop={4}
+                        >
+                          <Meta style={isCurrent ? styles.chipLabelActive : styles.chipLabel}>
+                            {STATUS_LABEL[choice]}
+                          </Meta>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                )
+              ) : null}
               <Pressable
                 onPress={onSave}
                 disabled={savingState === "saving" || savingState === "saved"}
@@ -333,6 +397,41 @@ const styles = StyleSheet.create((theme) => ({
     paddingTop: theme.space.s3,
     borderTopWidth: 1,
     borderTopColor: theme.colors.ruleSoft,
+    gap: theme.space.s3,
+  },
+  statusRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.space.s2,
+  },
+  chip: {
+    paddingHorizontal: theme.space.s3,
+    paddingVertical: theme.space.s2,
+    borderWidth: 1,
+    borderColor: theme.colors.ruleSoft,
+    backgroundColor: "transparent",
+  },
+  chipActive: {
+    paddingHorizontal: theme.space.s3,
+    paddingVertical: theme.space.s2,
+    borderWidth: 1,
+    borderColor: theme.colors.ink,
+    backgroundColor: theme.colors.muted,
+  },
+  chipLabel: {
+    color: theme.colors.inkSoft,
+  },
+  chipLabelActive: {
+    color: theme.colors.ink,
+  },
+  statusReadonly: {
+    gap: theme.space.s1,
+  },
+  statusBadge: {
+    color: theme.colors.accent,
+  },
+  statusHint: {
+    color: theme.colors.inkFaint,
   },
   saveBtn: {
     alignSelf: "stretch",
