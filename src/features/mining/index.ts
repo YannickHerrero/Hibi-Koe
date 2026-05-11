@@ -71,3 +71,11 @@ export { useAnalysis } from "./useAnalysis";
 export { hydrateFurigana, useFurigana } from "./useFurigana";
 export { hydrateMatchUnderline, useMatchUnderline } from "./useMatchUnderline";
 export { useSavedWords } from "./useSavedWords";
+export {
+  attachKnownWordsAppStateRefresh,
+  hydrateWordStatuses,
+  refreshKnownWords,
+  setManualWordStatus,
+  useWordStatuses,
+  type WordStatusLookup,
+} from "./wordStatuses";

@@ -7,7 +7,13 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { configureAudioSession } from "../src/audio/session";
 import { initDb } from "../src/db";
-import { hydrateFurigana, hydrateMatchUnderline } from "../src/features/mining";
+import {
+  attachKnownWordsAppStateRefresh,
+  hydrateFurigana,
+  hydrateMatchUnderline,
+  hydrateWordStatuses,
+  refreshKnownWords,
+} from "../src/features/mining";
 import { hydratePlaybackPrefs } from "../src/features/player";
 import { startTimeTracker } from "../src/features/timeTracking";
 import { UpdatePrompt } from "../src/features/updates";
@@ -41,8 +47,13 @@ function RootLayoutInner() {
         hydratePlaybackPrefs(),
         hydrateFurigana(),
         hydrateMatchUnderline(),
+        hydrateWordStatuses(),
       ]);
       setDbReady(true);
+      // Fire-and-forget: pull the merged manual + SRS classifications so
+      // the underline picks up any out-of-band changes from a recent
+      // review session.
+      refreshKnownWords().catch(() => {});
     })().catch((err) => {
       console.error("Failed to initialize db", err);
       setDbError(err instanceof Error ? err.message : String(err));
@@ -53,6 +64,7 @@ function RootLayoutInner() {
     });
 
     startTimeTracker();
+    attachKnownWordsAppStateRefresh();
   }, []);
 
   const initFailed = fontsError != null || dbError != null;
