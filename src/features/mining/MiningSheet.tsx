@@ -5,10 +5,42 @@ import { StyleSheet } from "react-native-unistyles";
 import { Display, Meta, Rule, SerifText } from "../../ui";
 import { seekToMs, togglePlay, usePlaybackProgress } from "../player";
 import { getMatchesCoveringToken } from "./match";
-import { TokenChip } from "./TokenChip";
+import { TokenChip, type TokenWordStatus } from "./TokenChip";
 import type { AnalysisData, AnalyzedCue, DictMatch } from "./types";
 import { useFurigana } from "./useFurigana";
 import { useMatchUnderline } from "./useMatchUnderline";
+import { useWordStatuses, type WordStatusLookup } from "./wordStatuses";
+
+// Convert katakana to hiragana so the (lemma, reading) lookup key
+// matches the identity stored on the server (always hiragana).
+function toHiragana(s: string): string {
+  let out = "";
+  for (let i = 0; i < s.length; i++) {
+    const code = s.charCodeAt(i);
+    out +=
+      code >= 0x30a1 && code <= 0x30f6
+        ? String.fromCharCode(code - 0x60)
+        : s[i];
+  }
+  return out;
+}
+
+// Identify the (lemma, reading) for a token. Prefers the headword of
+// the longest covering match (so 食べ物 looks up as 食べ物, not 食べ);
+// falls back to kuromoji lemma + hiragana(reading).
+function statusFor(
+  cue: AnalyzedCue,
+  tokenIndex: number,
+  matches: DictMatch[],
+  lookup: WordStatusLookup,
+): TokenWordStatus {
+  const head = matches[0];
+  const reading = toHiragana(cue.tokens[tokenIndex]?.reading ?? "");
+  const lemma = head?.form ?? cue.tokens[tokenIndex]?.lemma ?? "";
+  if (!lemma) return "unknown";
+  const hit = lookup(lemma, reading);
+  return hit ? hit.status : "unknown";
+}
 
 type Props = {
   visible: boolean;
@@ -45,6 +77,7 @@ function findCueIndexAt(cues: AnalyzedCue[], time: number): number {
 export function MiningSheet({ visible, analysis, positionMs, onClose, onTokenSelect }: Props) {
   const { furiganaOn } = useFurigana();
   const { matchUnderlineOn } = useMatchUnderline();
+  const { lookup: wordStatusLookup } = useWordStatuses();
   const { playing } = usePlaybackProgress();
   const insets = useSafeAreaInsets();
   const [mounted, setMounted] = useState(visible);
@@ -214,6 +247,7 @@ export function MiningSheet({ visible, analysis, positionMs, onClose, onTokenSel
                           index={i}
                           showFurigana={furiganaOn}
                           hasMatch={matchUnderlineOn && (coveringByIndex[i]?.length ?? 0) > 0}
+                          status={statusFor(cue, i, coveringByIndex[i] ?? [], wordStatusLookup)}
                           active={false}
                           onPress={onTokenPress}
                         />
