@@ -13,7 +13,7 @@ import {
   type AnalysisProgress,
   analyzeTrack,
   dictsAvailable,
-  hasApiKey,
+  hasHibiApiKey,
 } from "../src/features/mining";
 import { Button, Display, Label, Meta, Rule, SafeAreaView, SerifText } from "../src/ui";
 
@@ -75,7 +75,7 @@ export default function ImportScreen() {
     try {
       const track = await saveTrack({ audio, subtitle });
 
-      if (track.subtitlePath && (await hasApiKey()) && (await dictsAvailable())) {
+      if (track.subtitlePath && (await hasHibiApiKey()) && (await dictsAvailable())) {
         setPhase("analyzing");
         await analyzeTrack({
           trackId: track.id,

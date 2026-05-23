@@ -9,7 +9,6 @@ export {
   readAnalysis,
   writeAnalysis,
 } from "./analysisStore";
-export { clearApiKey, getApiKey, hasApiKey, setApiKey } from "./apiKey";
 export { clearHibiApiKey, getHibiApiKey, hasHibiApiKey, setHibiApiKey } from "./hibiApiKey";
 export { getHibiClient, HIBI_BASE_URL, resetHibiClient } from "./hibiClient";
 export { segmentFurigana } from "./furigana";
@@ -42,12 +41,6 @@ export {
 } from "./llm";
 export { MiningSheet } from "./MiningSheet";
 export { buildMatches, getMatchesCoveringToken } from "./match";
-export {
-  authHeaders,
-  OPENROUTER_BASE,
-  type OpenRouterKeyInfo,
-  testOpenRouterApiKey,
-} from "./openrouter";
 export {
   type AnalysisProgress,
   type AnalyzeOptions,

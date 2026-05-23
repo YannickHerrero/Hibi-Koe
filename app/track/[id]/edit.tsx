@@ -7,7 +7,7 @@ import {
   type AnalysisProgress,
   analyzeTrack,
   dictsAvailable,
-  hasApiKey,
+  hasHibiApiKey,
 } from "../../../src/features/mining";
 import {
   Button,
@@ -53,7 +53,7 @@ export default function EditTrackScreen() {
   const [reqs, setReqs] = useState<{ key: boolean; dict: boolean }>({ key: false, dict: false });
 
   useEffect(() => {
-    Promise.all([hasApiKey(), dictsAvailable()])
+    Promise.all([hasHibiApiKey(), dictsAvailable()])
       .then(([key, dict]) => setReqs({ key, dict }))
       .catch((err) => console.error("[track-edit] mining-reqs probe failed", err));
   }, []);

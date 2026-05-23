@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Field, Meta, SerifText } from "../../ui";
-import { clearApiKey, getApiKey, setApiKey } from "../mining";
 
-// Masked input for any secure-store-backed API key. Defaults to the
-// OpenRouter key for backwards compatibility; pass `accessor` props to
-// reuse the component for the Hibi key.
+// Masked input for any secure-store-backed API key. Caller supplies the
+// accessor — this component is intentionally agnostic about which key
+// it's editing.
 
 type Status = "idle" | "loaded" | "saving" | "saved" | "error";
 
@@ -17,20 +16,11 @@ export type ApiKeyAccessor = {
 };
 
 export type ApiKeyFieldProps = {
-  accessor?: ApiKeyAccessor;
+  accessor: ApiKeyAccessor;
   placeholder?: string;
 };
 
-const defaultAccessor: ApiKeyAccessor = {
-  get: getApiKey,
-  set: setApiKey,
-  clear: clearApiKey,
-};
-
-export function ApiKeyField({
-  accessor = defaultAccessor,
-  placeholder = "sk-or-v1-…",
-}: ApiKeyFieldProps = {}) {
+export function ApiKeyField({ accessor, placeholder = "sk-…" }: ApiKeyFieldProps) {
   const [value, setValue] = useState("");
   const [reveal, setReveal] = useState(false);
   const [hasStored, setHasStored] = useState(false);
