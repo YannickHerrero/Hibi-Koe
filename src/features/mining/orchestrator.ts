@@ -12,8 +12,8 @@ import { File } from "expo-file-system";
 import { updateTrack } from "../../db";
 import { parseSrt } from "../subtitles/srt";
 import { writeAnalysis } from "./analysisStore";
-import { getApiKey } from "./apiKey";
 import { loadDictionaries } from "./dict";
+import { hasHibiApiKey } from "./hibiApiKey";
 import { translateCues } from "./llm";
 import { buildMatches } from "./match";
 import { getTokenizer, tokenize } from "./tokenize";
@@ -99,14 +99,14 @@ export async function analyzeTrack(opts: AnalyzeOptions): Promise<AnalysisData> 
     log("tokenization complete");
 
     if (!skipTranslate) {
-      const apiKey = await getApiKey();
-      if (!apiKey) throw new Error("OpenRouter API key not configured.");
+      if (!(await hasHibiApiKey())) {
+        throw new Error("Hibi API key not configured.");
+      }
 
-      log(`translating ${cues.length} cues via OpenRouter`);
+      log(`translating ${cues.length} cues via Hibi proxy`);
       const byIndex = new Map<number, AnalyzedCue>(cues.map((c) => [c.index, c]));
       let translatedCount = 0;
       await translateCues({
-        apiKey,
         cues: cues.map((c) => ({ index: c.index, text: c.text })),
         signal,
         onLog: log,

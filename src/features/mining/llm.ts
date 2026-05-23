@@ -1,6 +1,9 @@
-// Subtitle translation + grammar-note generation via OpenRouter.
+// Subtitle translation + grammar-note generation via the Hibi AI proxy.
 //
-// Ported from Pureyaa src/analysis/llm.ts.
+// The user's OpenRouter key lives encrypted on the Hibi server
+// (configured once per user in the portal) — this client authenticates
+// to Hibi with a hibi_ key and the server makes the OR call with the
+// user's stored credential. OR bills the user's account.
 //
 // The streaming machinery is unusual: RN's `fetch` buffers SSE bodies
 // and `res.body` is null, so we use XHR which exposes `responseText`
@@ -8,7 +11,8 @@
 // incremental JSON-array parser so we can emit each translation as
 // it's generated rather than waiting for the whole episode.
 
-import { authHeaders, OPENROUTER_BASE } from "./openrouter";
+import { getHibiApiKey } from "./hibiApiKey";
+import { HIBI_BASE_URL } from "./hibiClient";
 
 export type CueTranslation = {
   index: number;
@@ -17,7 +21,6 @@ export type CueTranslation = {
 };
 
 export type TranslateOptions = {
-  apiKey: string;
   cues: { index: number; text: string }[];
   signal?: AbortSignal;
   model?: string;
@@ -90,7 +93,11 @@ function streamingPost(
 }
 
 export async function translateCues(opts: TranslateOptions): Promise<CueTranslation[]> {
-  const { apiKey, cues, signal, model = ANALYSIS_MODEL, onItem, onLog } = opts;
+  const { cues, signal, model = ANALYSIS_MODEL, onItem, onLog } = opts;
+  const hibiKey = await getHibiApiKey();
+  if (!hibiKey) {
+    throw new Error("Hibi API key not configured.");
+  }
   const userMessage = cues.map((c) => `[${c.index}] ${c.text}`).join("\n");
 
   const parser = new IncrementalArrayParser();
@@ -113,7 +120,7 @@ export async function translateCues(opts: TranslateOptions): Promise<CueTranslat
   let firstChunk = true;
 
   await streamingPost(
-    `${OPENROUTER_BASE}/chat/completions`,
+    `${HIBI_BASE_URL}/v1/ai/chat/completions`,
     JSON.stringify({
       model,
       max_tokens: 16384,
@@ -125,7 +132,7 @@ export async function translateCues(opts: TranslateOptions): Promise<CueTranslat
     }),
     {
       "content-type": "application/json",
-      ...authHeaders(apiKey),
+      Authorization: `Bearer ${hibiKey}`,
     },
     (chunk) => {
       chunkCount += 1;
