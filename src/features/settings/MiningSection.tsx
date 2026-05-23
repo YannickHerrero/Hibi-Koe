@@ -27,21 +27,12 @@ export function MiningSection() {
   return (
     <View style={styles.wrap}>
       <View style={styles.row}>
-        <Meta>OpenRouter API key</Meta>
-        <Rule variant="soft" style={styles.rule} />
-        <ApiKeyField />
-        <SerifText soft italic style={styles.hint}>
-          Used for context-aware translations during track import.
-        </SerifText>
-      </View>
-
-      <View style={styles.row}>
         <Meta>Hibi API key</Meta>
         <Rule variant="soft" style={styles.rule} />
         <ApiKeyField accessor={hibiAccessor} placeholder="hibi_…" />
         <SerifText soft italic style={styles.hint}>
-          Mined words sync to your Hibi library when set. Generate a key at
-          hibi-portal.vercel.app → API keys.
+          Powers mined-word sync and the AI-driven track translations. Set
+          your OpenRouter key once at app.hibi.app — it stays on the server.
         </SerifText>
       </View>
 
